@@ -1,64 +1,73 @@
-# Readink
+# React + TypeScript + Vite
 
-**Tu tracker personal de lectura.** Aplicación web para organizar libros en tres estados (quiero leer / leyendo / leídos), con notas y valoraciones, usando metadatos reales vía [Open Library](https://openlibrary.org/).
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Qué resuelve
+Currently, two official plugins are available:
 
-Centralizar en un solo sitio el seguimiento de tu biblioteca personal: qué te falta por leer, qué estás leyendo y qué has terminado, con notas y puntuaciones cuando corresponda.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Público objetivo
+## React Compiler
 
-Lectores habituales o casuales que quieren una biblioteca digital ordenada sin complicarse.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Stack previsto
+## Expanding the ESLint configuration
 
-| Capa | Tecnología |
-|------|------------|
-| Frontend | Cliente web (despliegue previsto en **Vercel**) |
-| Búsqueda de libros | **Open Library API** (gratis, sin API key) |
-| Backend (opcional) | **Express**, API REST — despliegue previsto en **Render** |
-| Persistencia local | **LocalStorage** en el MVP; backend para datos centralizados si aplica |
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## Documentación
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-- [Idea y alcance del proyecto](docs/idea.md)
-- [Agile, Scrum y Kanban](docs/agile.md) (referencia de metodología)
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-## Organización del desarrollo (Trello)
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-El trabajo se gestiona en un tablero **Trello** llamado **Readink**. Flujo tipo Kanban:
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-| Columna | Propósito |
-|---------|-----------|
-| **Backlog** | Funcionalidades y bloques de trabajo priorizados, aún no planificados para la iteración actual |
-| **Todo** | Tarjetas listas para empezar |
-| **In Progress** | En curso |
-| **Review** | Revisión de código, pruebas o UX antes de dar por cerrado |
-| **Done** | Completado |
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-Cada tarjeta de funcionalidad se descompone en **subtareas técnicas** (checklist o tarjetas hijas). Las tarjetas se **mueven entre columnas** según el avance real del desarrollo.
-
-### Tarjetas iniciales en Backlog
-
-1. Layout y diseño general  
-2. Backend Express — API REST  
-3. Buscador de libros (Open Library API)  
-4. Mis tres listas (Quiero leer / Leyendo / Leídos)  
-5. Detalle de libro  
-6. Valoración con estrellas  
-7. Notas personales  
-8. Cliente API tipado (`src/api/client.ts`)  
-9. Despliegue (Vercel + Render)  
-
-## API REST del backend (referencia)
-
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/api/books` | Listar libros guardados |
-| `POST` | `/api/books` | Añadir un libro a una lista |
-| `PATCH` | `/api/books/:id` | Actualizar lista, nota o valoración |
-| `DELETE` | `/api/books/:id` | Eliminar un libro |
-
-## Licencia
-
-Por definir.
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
