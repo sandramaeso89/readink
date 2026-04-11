@@ -42,6 +42,7 @@ Estructura preparada para Express: `routes/`, `controllers/`, `services/`, `conf
 ## Documentación
 
 - [Idea y alcance](docs/idea.md)
+- [Arquitectura y diseño (API, estado, componentes)](docs/design.md)
 - [Gestión del proyecto (Trello, flujo de trabajo)](docs/project-management.md)
 - [Agile, Scrum y Kanban](docs/agile.md) (referencia)
 
