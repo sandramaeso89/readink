@@ -43,3 +43,17 @@ en distintas páginas de la aplicación.
 
 Usuario → Frontend (React) → API Client (src/api/client.ts) → Backend (Express)
 Frontend → Open Library API (búsqueda externa)
+
+## Diagrama de flujo de datos
+
+```mermaid
+flowchart LR
+  U[Usuario] --> FE[Frontend React]
+  FE -->|Buscar libros| OL[Open Library API]
+  FE -->|CRUD biblioteca| API[/API Express /api/v1/]
+  API --> DB[(Persistencia servidor)]
+  FE --> LS[(LocalStorage - modo MVP)]
+```
+
+En modo MVP sin backend activo, el frontend usa LocalStorage.
+Cuando el backend está activo, el frontend persiste la biblioteca vía `/api/v1/books`.

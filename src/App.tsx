@@ -41,12 +41,12 @@ const MOCK_BOOKS: Book[] = [
 ]
 
 function App() {
-  // Guardamos el texto que escribe la usuaria en el buscador
+  // Guardamos el texto que escribe la usuaria en el buscador.
   const [query, setQuery] = useState('')
-  // Guardamos qué libro está abierto en el modal (detalle)
+  // Guardamos qué libro está abierto en el modal de detalle.
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
 
-  // Filtramos por título o autor para demostrar consumo de datos tipados
+  // Filtramos por título o autor para mostrar solo coincidencias.
   const filteredBooks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
 
@@ -66,18 +66,27 @@ function App() {
   }, [query])
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:px-6">
-        <header className="space-y-2">
-          <p className="text-sm font-medium uppercase tracking-wider text-violet-600">
-            Readink
+    <main className="relative min-h-screen overflow-hidden bg-brand-900 text-brand-200">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-24 top-12 h-72 w-72 rounded-full bg-brand-500/30 blur-3xl" />
+        <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-brand-accent/25 blur-3xl" />
+        <div className="absolute bottom-10 left-1/3 h-72 w-72 rounded-full bg-brand-700/25 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-12 md:px-8 md:py-16">
+        <header className="space-y-4 rounded-3xl border border-brand-accent/25 bg-brand-800/55 p-6 shadow-2xl backdrop-blur-sm md:p-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-brand-100">
+            Personal Reading Hub
           </p>
-          <h1 className="text-3xl font-semibold leading-tight md:text-4xl">
-            Tu tracker personal de lectura
+          <h1 className="text-5xl font-bold uppercase tracking-[0.08em] text-brand-accent md:text-7xl">
+            Readink
           </h1>
-          <p className="max-w-2xl text-sm text-slate-600 md:text-base">
-            Componentes reutilizables en React + TypeScript con estilo moderno
-            usando Tailwind CSS.
+          <p className="text-xl font-medium leading-tight text-brand-200 md:text-3xl">
+            Tu tracker personal de lectura
+          </p>
+          <p className="max-w-3xl text-sm leading-relaxed text-brand-100 md:text-base">
+            Organiza tus libros y mantén tus notas de lectura en una interfaz
+            moderna con estética morada.
           </p>
         </header>
 
@@ -85,7 +94,7 @@ function App() {
           value={query}
           onChange={setQuery}
           onSubmit={(event) => {
-            // Evitamos que el formulario recargue la página
+            // Evitamos que el formulario recargue la página.
             event.preventDefault()
           }}
         />

@@ -14,7 +14,7 @@ export function SearchForm({ value, onChange, onSubmit }: SearchFormProps) {
   return (
     <form
       onSubmit={onSubmit}
-      className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:flex-row"
+      className="flex flex-col gap-3 rounded-2xl border border-brand-accent/35 bg-brand-800/80 p-4 shadow-lg shadow-black/30 backdrop-blur-sm md:flex-row md:items-center md:p-5"
     >
       <label htmlFor="search-book" className="sr-only">
         Buscar libro
@@ -25,7 +25,7 @@ export function SearchForm({ value, onChange, onSubmit }: SearchFormProps) {
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder="Busca por título o autor"
-        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-sm text-slate-900 outline-none ring-violet-300 transition focus:ring-2"
+        className="w-full rounded-xl border border-brand-200/25 bg-brand-900/90 px-4 py-3 text-sm text-brand-200 outline-none ring-brand-accent transition focus:border-brand-accent focus:ring-2 placeholder:text-brand-100"
       />
       <Button type="submit">Buscar</Button>
     </form>

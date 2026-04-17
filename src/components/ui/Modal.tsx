@@ -19,10 +19,10 @@ export function Modal({ isOpen, title, children, onClose }: ModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-900/85 p-4">
+      <div className="w-full max-w-xl rounded-3xl border border-brand-accent/40 bg-brand-800/95 p-6 shadow-2xl shadow-black/40 backdrop-blur-sm md:p-7">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <h2 className="text-xl font-semibold text-brand-accent">{title}</h2>
           <Button variant="ghost" onClick={onClose}>
             Cerrar
           </Button>

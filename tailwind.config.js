@@ -10,8 +10,19 @@ export default {
   ],
   theme: {
     extend: {
-      // Aquí podríamos añadir colores, fuentes o tamaños personalizados
-      // Por ahora lo dejamos vacío
+      // Paleta morada para la estética que pediste.
+      colors: {
+        brand: {
+          900: '#0b0b16', // Fondo principal oscuro púrpura
+          800: '#16162a', // Superficies oscuras
+          700: '#7c3aed', // Púrpura fuerte para hover
+          accent: '#c084fc', // Acento lila claro
+          500: '#8b5cf6', // Púrpura principal
+          200: '#f3e8ff', // Texto claro principal
+          100: '#c4b5fd', // Texto secundario suave
+          redDark: '#6d28d9', // Púrpura oscuro auxiliar (mantengo clave por compatibilidad)
+        },
+      },
     },
   },
   plugins: [

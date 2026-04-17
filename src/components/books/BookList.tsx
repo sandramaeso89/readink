@@ -21,12 +21,19 @@ export function BookList({
 }: BookListProps) {
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+      <div className="flex flex-col gap-1">
+        <h2 className="text-2xl font-semibold tracking-wide text-brand-accent">
+          {title}
+        </h2>
+        <p className="text-sm text-brand-100">
+          Selecciona un libro para ver su detalle y tus notas guardadas.
+        </p>
+      </div>
 
       {books.length === 0 ? (
         <EmptyState title="Sin resultados" description={emptyMessage} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {books.map((book) => (
             <BookCard key={book.id} book={book} onOpenDetails={onOpenDetails} />
           ))}

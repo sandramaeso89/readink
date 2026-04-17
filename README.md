@@ -2,6 +2,8 @@
 
 **Tu tracker personal de lectura.** Web para organizar libros en tres estados (quiero leer / leyendo / leídos), con notas y valoraciones, usando metadatos reales vía [Open Library](https://openlibrary.org/).
 
+Estado actual: base frontend con componentes reutilizables tipados en TypeScript, estilos con Tailwind y una identidad visual oscura/editorial inspirada en referencias de color rojo + verde.
+
 ## Stack
 
 | Herramienta | Uso |
@@ -21,19 +23,36 @@ npm run preview  # vista previa del build
 npm run lint     # ESLint
 ```
 
+## Identidad visual actual
+
+- Marca protagonista: **Readink** en cabecera principal.
+- Estilo general: fondo oscuro, contraste alto y estética minimalista.
+- Jerarquía de texto:
+  - texto grande/titulares en rojo,
+  - texto secundario en blanco.
+- Tarjetas de libro con fondo completo difuminado:
+  - variante roja para estados `WISHLIST` y `READ`,
+  - variante verde para estado `READING`.
+- Paleta configurada en Tailwind (`tailwind.config.js`) bajo `colors.brand`.
+
 ## Estructura del repositorio
 
 ### Frontend (`src/`)
 
 | Carpeta | Contenido |
 |---------|-----------|
-| `components/` | Componentes reutilizables |
-| `pages/` | Pantallas / vistas |
-| `hooks/` | Hooks personalizados |
-| `types/` | Tipos e interfaces TypeScript |
-| `utils/` | Funciones auxiliares |
-| `context/` | Context API (estado global si aplica) |
-| `api/` | Cliente HTTP tipado hacia el backend u Open Library |
+| `components/books/` | Componentes de dominio (tarjetas, listas, formulario, modal detalle) |
+| `components/ui/` | Componentes UI reutilizables (button, modal base, empty state) |
+| `types/` | Tipos TypeScript compartidos (`Book`, `ReadingStatus`) |
+| `App.tsx` | Composición principal, marca y layout de la home |
+| `main.tsx` | Punto de entrada de React |
+| `index.css` | Estilos base e import de Tailwind |
+
+### Flujo de render (importante)
+
+- `index.html` es la plantilla base con `<div id="root"></div>`.
+- React monta la app dentro de ese div desde `src/main.tsx`.
+- La interfaz visible se construye en `src/App.tsx` y sus componentes.
 
 ### Backend (`server/`)
 
@@ -43,6 +62,7 @@ Estructura preparada para Express: `routes/`, `controllers/`, `services/`, `conf
 
 - [Idea y alcance](docs/idea.md)
 - [Arquitectura y diseño (API, estado, componentes)](docs/design.md)
+- [Catálogo de componentes](docs/components.md)
 - [Gestión del proyecto (Trello, flujo de trabajo)](docs/project-management.md)
 - [Agile, Scrum y Kanban](docs/agile.md) (referencia)
 
