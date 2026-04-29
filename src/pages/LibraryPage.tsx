@@ -1,4 +1,4 @@
-import { useEffect, useState, type KeyboardEvent } from 'react'
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { LibraryStats } from '../components/books/LibraryStats'
 import { Modal } from '../components/ui/Modal'
@@ -8,7 +8,7 @@ import { type LibraryCard, useLibraryContext } from '../context/LibraryContext'
 function statusLabel(status: LibraryCard['status']) {
   if (status === 'wishlist') return 'Wishlist'
   if (status === 'reading') return 'Leyendo'
-  return 'Leido'
+  return 'Leído'
 }
 
 // Color de fondo del icono segun el estado.
@@ -37,6 +37,8 @@ interface BookCardProps {
   readonly isSelected: boolean
   readonly onSelect: (bookId: string) => void
 }
+
+type LibrarySort = 'recent' | 'title' | 'rating' | 'progress'
 
 // Tarjeta individual de libro. Es un <button> para accesibilidad
 // (se puede activar con click, Enter o Espacio).
@@ -74,6 +76,9 @@ function BookCard({ book, isSelected, onSelect }: BookCardProps) {
         {book.title}
       </h3>
       <p className="mb-2 truncate text-[11px] text-[var(--ri-text-muted)]">{book.author}</p>
+      {book.note ? (
+        <p className="line-clamp-2 text-[10px] text-[var(--ri-text-muted)]">"{book.note}"</p>
+      ) : null}
       <div className="mt-auto flex items-center justify-between">
         <span className={`rounded-full px-2 py-0.5 text-[10px] ${tagClasses(book.status)}`}>
           {statusLabel(book.status)}
@@ -114,9 +119,17 @@ export function LibraryPage() {
     markBookAsRead,
     updateBookProgress,
     updateBookStars,
+    updateBookNote,
   } = useLibraryContext()
   // Valor temporal del slider para editar progreso antes de guardar.
   const [progressDraft, setProgressDraft] = useState(0)
+  // Valor temporal para editar nota del libro en el modal.
+  const [noteDraft, setNoteDraft] = useState('')
+  // Filtros de busqueda para columnas de biblioteca.
+  const [searchTerm, setSearchTerm] = useState('')
+  const [genreFilter, setGenreFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | LibraryCard['status']>('all')
+  const [sortBy, setSortBy] = useState<LibrarySort>('recent')
 
   // Mantiene el titulo de la pestaña al dia con el total de libros.
   useEffect(() => {
@@ -129,6 +142,62 @@ export function LibraryPage() {
       setProgressDraft(openedBook.progress ?? 0)
     }
   }, [openedBook])
+
+  // Sincroniza la nota temporal cuando cambias de libro abierto.
+  useEffect(() => {
+    setNoteDraft(openedBook?.note ?? '')
+  }, [openedBook])
+
+  // Lista de generos para el filtro rapido.
+  const availableGenres = useMemo(() => {
+    const uniqueGenres = new Set<string>()
+    ;[...wishlistBooks, ...readingBooks, ...readBooks].forEach((book) => {
+      if (book.genre) {
+        uniqueGenres.add(book.genre)
+      }
+    })
+    return [...uniqueGenres].sort((a, b) => a.localeCompare(b))
+  }, [wishlistBooks, readingBooks, readBooks])
+
+  // Reglas unificadas para filtrar y ordenar cada columna.
+  const filterAndSortBooks = (books: LibraryCard[]) => {
+    const query = searchTerm.trim().toLowerCase()
+    const filtered = books.filter((book) => {
+      if (statusFilter !== 'all' && book.status !== statusFilter) {
+        return false
+      }
+      if (genreFilter !== 'all' && (book.genre ?? '') !== genreFilter) {
+        return false
+      }
+      if (!query) {
+        return true
+      }
+      return (
+        book.title.toLowerCase().includes(query) ||
+        book.author.toLowerCase().includes(query) ||
+        (book.note?.toLowerCase().includes(query) ?? false)
+      )
+    })
+
+    return filtered.sort((a, b) => {
+      if (sortBy === 'title') {
+        return a.title.localeCompare(b.title)
+      }
+      if (sortBy === 'rating') {
+        return (b.stars ?? 0) - (a.stars ?? 0)
+      }
+      if (sortBy === 'progress') {
+        return (b.progress ?? 0) - (a.progress ?? 0)
+      }
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
+      return bDate - aDate
+    })
+  }
+
+  const visibleWishlistBooks = useMemo(() => filterAndSortBooks(wishlistBooks), [wishlistBooks, searchTerm, genreFilter, statusFilter, sortBy])
+  const visibleReadingBooks = useMemo(() => filterAndSortBooks(readingBooks), [readingBooks, searchTerm, genreFilter, statusFilter, sortBy])
+  const visibleReadBooks = useMemo(() => filterAndSortBooks(readBooks), [readBooks, searchTerm, genreFilter, statusFilter, sortBy])
 
   return (
     <>
@@ -146,15 +215,59 @@ export function LibraryPage() {
 
       <LibraryStats />
 
+      <section className="px-8 pb-4">
+        <div className="grid grid-cols-1 gap-3 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4 md:grid-cols-2 xl:grid-cols-4">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buscar por título, autor o nota"
+            className="h-10 rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 text-xs text-[var(--ri-text-secondary)] outline-none focus:border-[var(--ri-accent)]"
+          />
+          <select
+            value={genreFilter}
+            onChange={(event) => setGenreFilter(event.target.value)}
+            className="h-10 rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 text-xs text-[var(--ri-text-secondary)] outline-none focus:border-[var(--ri-accent)]"
+          >
+            <option value="all">Todos los géneros</option>
+            {availableGenres.map((genre) => (
+              <option key={genre} value={genre}>
+                {genre}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as 'all' | LibraryCard['status'])}
+            className="h-10 rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 text-xs text-[var(--ri-text-secondary)] outline-none focus:border-[var(--ri-accent)]"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="wishlist">Quiero leer</option>
+            <option value="reading">Leyendo</option>
+            <option value="read">Leído</option>
+          </select>
+          <select
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value as LibrarySort)}
+            className="h-10 rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 text-xs text-[var(--ri-text-secondary)] outline-none focus:border-[var(--ri-accent)]"
+          >
+            <option value="recent">Orden: añadidos recientemente</option>
+            <option value="title">Orden: título A-Z</option>
+            <option value="rating">Orden: mejor valorados</option>
+            <option value="progress">Orden: mayor progreso</option>
+          </select>
+        </div>
+      </section>
+
       <section className="grid grid-cols-1 gap-4 px-8 pb-8 md:grid-cols-3">
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[11px] uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Quiero leer</h2>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] ${badgeClasses('wishlist')}`}>
-              {wishlistBooks.length}
+              {visibleWishlistBooks.length}
             </span>
           </div>
-          {wishlistBooks.map((book) => (
+          {visibleWishlistBooks.map((book) => (
             <BookCard
               key={book.id}
               book={book}
@@ -162,16 +275,24 @@ export function LibraryPage() {
               onSelect={handleSelectBook}
             />
           ))}
+          {visibleWishlistBooks.length === 0 ? (
+            <div className="rounded-md border border-dashed border-[var(--ri-border)] px-4 py-6 text-center">
+              <p className="text-[11px] leading-relaxed text-[#777]">Sin resultados en quiero leer.</p>
+              <Link to="/explorar" className="mt-2 inline-block text-xs text-[var(--ri-accent)] underline">
+                Ir a explorar
+              </Link>
+            </div>
+          ) : null}
         </div>
 
         <div>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[11px] uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Leyendo</h2>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] ${badgeClasses('reading')}`}>
-              {readingBooks.length}
+              {visibleReadingBooks.length}
             </span>
           </div>
-          {readingBooks.map((book) => (
+          {visibleReadingBooks.map((book) => (
             <BookCard
               key={book.id}
               book={book}
@@ -179,23 +300,28 @@ export function LibraryPage() {
               onSelect={handleSelectBook}
             />
           ))}
+          {visibleReadingBooks.length === 0 ? (
+            <div className="rounded-md border border-dashed border-[var(--ri-border)] px-4 py-6 text-center">
+              <p className="text-[11px] leading-relaxed text-[#777]">Sin resultados en leyendo.</p>
+            </div>
+          ) : null}
         </div>
 
         <div>
           <div className="mb-3 flex items-center justify-between">
             <Link
               to="/leidos"
-              title="Ir a pagina de leidos"
+              title="Ir a página de leídos"
               className="group inline-flex items-center gap-1 text-[11px] uppercase tracking-[1.5px] text-[var(--ri-text-muted)] underline-offset-2 transition-colors hover:text-[var(--ri-accent)] hover:underline"
             >
-              <span>Leidos</span>
+              <span>Leídos</span>
               <span className="text-[10px] transition-transform group-hover:translate-x-0.5">→</span>
             </Link>
             <span className={`rounded-full border px-2 py-0.5 text-[10px] ${badgeClasses('read')}`}>
-              {readBooks.length}
+              {visibleReadBooks.length}
             </span>
           </div>
-          {readBooks.map((book) => (
+          {visibleReadBooks.map((book) => (
             <BookCard
               key={book.id}
               book={book}
@@ -203,9 +329,9 @@ export function LibraryPage() {
               onSelect={handleSelectBook}
             />
           ))}
-          {readBooks.length === 0 ? (
+          {visibleReadBooks.length === 0 ? (
             <div className="rounded-md border border-dashed border-[var(--ri-border)] px-4 py-6 text-center">
-              <p className="text-[11px] leading-relaxed text-[#333]">Anade mas libros a tu lista</p>
+              <p className="text-[11px] leading-relaxed text-[#777]">Sin resultados en leídos.</p>
             </div>
           ) : null}
         </div>
@@ -215,7 +341,7 @@ export function LibraryPage() {
         {openedBook ? (
           <div className="space-y-4">
             <div className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
-              <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Titulo</p>
+              <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Título</p>
               <p className="mt-1 text-lg font-medium text-[var(--ri-text-primary)]">{openedBook.title}</p>
             </div>
 
@@ -272,7 +398,7 @@ export function LibraryPage() {
                   }}
                   className="ml-2 rounded-md bg-[var(--ri-accent)] px-4 py-2 text-xs font-medium text-[var(--ri-bg)]"
                 >
-                  Marcar como leido
+                  Marcar como leído
                 </button>
 
                 <button
@@ -307,7 +433,7 @@ export function LibraryPage() {
             {openedBook.status === 'read' ? (
               <>
                 <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-                  <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Valoracion</p>
+                  <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Valoración</p>
                   <div className="mt-2 flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -339,6 +465,24 @@ export function LibraryPage() {
                 </div>
               </>
             ) : null}
+
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Nota personal</p>
+              <textarea
+                value={noteDraft}
+                onChange={(event) => setNoteDraft(event.target.value)}
+                rows={3}
+                placeholder="Escribe una frase o resumen corto..."
+                className="mt-2 w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-xs text-[var(--ri-text-secondary)] outline-none focus:border-[var(--ri-accent)]"
+              />
+              <button
+                type="button"
+                onClick={() => updateBookNote(openedBook.id, noteDraft)}
+                className="mt-3 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-2 text-xs font-medium text-[var(--ri-text-secondary)]"
+              >
+                Guardar nota
+              </button>
+            </div>
           </div>
         ) : null}
       </Modal>

@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal'
 const NAV_LINKS = [
   { to: '/', label: 'Biblioteca', end: true },
   { to: '/explorar', label: 'Explorar', end: false },
-  { to: '/estadisticas', label: 'Estadisticas', end: false },
+  { to: '/estadisticas', label: 'Estadísticas', end: false },
 ]
 
 // Funcion helper que calcula las clases del NavLink segun si esta activo o no.
@@ -51,7 +51,7 @@ export function MainLayout() {
             onClick={() => setIsAddBookModalOpen(true)}
             className="rounded-md bg-[var(--ri-accent)] px-4 py-1.5 text-xs font-medium text-[var(--ri-bg)]"
           >
-            + Anadir libro
+            + Añadir libro
           </button>
         </nav>
 
@@ -60,7 +60,7 @@ export function MainLayout() {
 
         <Modal
           isOpen={isAddBookModalOpen}
-          title="Anadir libro"
+          title="Añadir libro"
           onClose={() => setIsAddBookModalOpen(false)}
         >
           <AddBookForm onSuccess={() => setIsAddBookModalOpen(false)} />

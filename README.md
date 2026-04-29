@@ -19,6 +19,7 @@ Estado actual: frontend en React + TypeScript con layout minimalista oscuro, est
 
 ```bash
 # desarrollo (Vite)
+npm run dev     # inicia servidor de desarrollo
 npm run build    # compilación para producción
 npm run preview  # vista previa del build
 npm run lint     # ESLint
@@ -103,6 +104,21 @@ En `/estadisticas` ahora se muestran metricas reales de lectura:
 
 En `/explorar` se muestran recomendaciones y sugerencias locales segun tus autores/generos mas usados.
 
+## Funcionalidades nuevas (abril 2026)
+
+Se implementaron mejoras clave orientadas a UX y crecimiento del proyecto:
+
+- Objetivo anual de lectura con barra de progreso en `Estadísticas`.
+- Buscador, filtros y orden en `Biblioteca`.
+- Notas personales por libro (edición desde modal).
+- Importación/autocompletado desde Open Library en el formulario.
+- Estados vacíos mejorados con CTA claros.
+- Nuevos metadatos (`createdAt`, `finishedAt`) para estadísticas y orden.
+
+Documentación detallada:
+
+- [Nuevas funcionalidades](docs/features.md)
+
 ## Formularios controlados
 
 Se implemento un formulario controlado para anadir libros usando React:
@@ -170,6 +186,7 @@ Estructura preparada para Express: `routes/`, `controllers/`, `services/`, `conf
 - [Context API en el proyecto](docs/context.md)
 - [Rutas y navegación](docs/routing.md)
 - [Formularios controlados](docs/forms.md)
+- [Nuevas funcionalidades](docs/features.md)
 
 ## Tablero Trello
 

@@ -36,7 +36,7 @@ export function ExplorePage() {
   const [isLoadingTrends, setIsLoadingTrends] = useState(false)
   const [trendsError, setTrendsError] = useState('')
 
-  // Generos y autores mas frecuentes de la biblioteca.
+  // Géneros y autores más frecuentes de la biblioteca.
   const profile = useMemo(() => {
     const genreCount = new Map<string, number>()
     const authorCount = new Map<string, number>()
@@ -140,13 +140,13 @@ export function ExplorePage() {
         Descubre nuevos libros.
       </h1>
       <p className="mb-6 text-sm text-[var(--ri-text-muted)]">
-        Recomendaciones basadas en tu biblioteca actual. Mas adelante se conectaran con Open Library.
+        Recomendaciones basadas en tu biblioteca actual. Más adelante se conectarán con Open Library.
       </p>
 
       {hasReadingHistory ? null : (
         <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
           <p className="text-sm text-[var(--ri-text-muted)]">
-            Anade algunos libros a tu biblioteca para personalizar mejor las recomendaciones.
+            Añade algunos libros a tu biblioteca para personalizar mejor las recomendaciones.
           </p>
         </div>
       )}
@@ -167,6 +167,14 @@ export function ExplorePage() {
 
         {!isLoadingTrends && !trendsError ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {trendingBooks.length === 0 ? (
+              <article className="rounded-md border border-dashed border-[var(--ri-border)] bg-[#111] p-4">
+                <p className="text-sm text-[var(--ri-text-muted)]">Ahora mismo no hay tendencias disponibles.</p>
+                <Link to="/" className="mt-2 inline-block text-xs text-[var(--ri-accent)] underline">
+                  Volver a biblioteca
+                </Link>
+              </article>
+            ) : null}
             {trendingBooks.map((book) => (
               <article key={book.title} className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
                 <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
@@ -178,7 +186,7 @@ export function ExplorePage() {
                   disabled={ownedTitles.has(book.title.toLowerCase())}
                   className="mt-3 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Anadir a biblioteca'}
+                  {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Añadir a biblioteca'}
                 </button>
               </article>
             ))}
@@ -191,6 +199,14 @@ export function ExplorePage() {
           Recomendadas para ti
         </h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {recommended.length === 0 ? (
+            <article className="rounded-md border border-dashed border-[var(--ri-border)] bg-[#111] p-4">
+              <p className="text-sm text-[var(--ri-text-muted)]">No hay recomendaciones nuevas por ahora.</p>
+              <Link to="/" className="mt-2 inline-block text-xs text-[var(--ri-accent)] underline">
+                Ir a biblioteca
+              </Link>
+            </article>
+          ) : null}
           {recommended.map((book) => (
             <article key={book.title} className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
               <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
@@ -202,7 +218,7 @@ export function ExplorePage() {
                 disabled={ownedTitles.has(book.title.toLowerCase())}
                 className="mt-3 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Anadir a biblioteca'}
+                  {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Añadir a biblioteca'}
               </button>
             </article>
           ))}
@@ -214,6 +230,14 @@ export function ExplorePage() {
           Sugerencias para ampliar tu biblioteca
         </h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          {suggestions.length === 0 ? (
+            <article className="rounded-md border border-dashed border-[var(--ri-border)] bg-[#111] p-4">
+              <p className="text-sm text-[var(--ri-text-muted)]">Ya has agregado casi todo el catálogo sugerido.</p>
+              <Link to="/" className="mt-2 inline-block text-xs text-[var(--ri-accent)] underline">
+                Revisar biblioteca
+              </Link>
+            </article>
+          ) : null}
           {suggestions.map((book) => (
             <article key={book.title} className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
               <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
@@ -225,7 +249,7 @@ export function ExplorePage() {
                 disabled={ownedTitles.has(book.title.toLowerCase())}
                 className="mt-3 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Anadir a biblioteca'}
+                  {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Añadir a biblioteca'}
               </button>
             </article>
           ))}

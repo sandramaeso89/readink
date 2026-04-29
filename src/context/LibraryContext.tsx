@@ -13,8 +13,14 @@ export interface LibraryCard {
   title: string
   author: string
   genre?: string
+  // Nota corta personal sobre el libro.
+  note?: string
   // URL de portada. Queda lista para Open Library.
   coverUrl?: string
+  // Fecha de alta del libro para ordenaciones.
+  createdAt?: string
+  // Fecha de finalizacion para objetivo anual.
+  finishedAt?: string
   icon: string
   status: 'wishlist' | 'reading' | 'read'
   progress?: number
@@ -75,6 +81,180 @@ const INITIAL_BOOKS: LibraryCard[] = [
     status: 'read',
     stars: 5,
   },
+  {
+    id: 'wishlist-4',
+    title: 'Dune',
+    author: 'Frank Herbert',
+    genre: 'Fantasia',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'wishlist-5',
+    title: 'La generacion ansiosa',
+    author: 'Jonathan Haidt',
+    genre: 'Productividad',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'wishlist-6',
+    title: 'Cien anos de soledad',
+    author: 'Gabriel Garcia Marquez',
+    genre: 'Novela',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'wishlist-7',
+    title: 'Proyecto Hail Mary',
+    author: 'Andy Weir',
+    genre: 'Ciencia',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'reading-3',
+    title: 'El cuerpo lleva la cuenta',
+    author: 'Bessel van der Kolk',
+    genre: 'Ciencia',
+    icon: '📗',
+    status: 'reading',
+    progress: 34,
+  },
+  {
+    id: 'reading-4',
+    title: 'Don Quijote de la Mancha',
+    author: 'Miguel de Cervantes',
+    genre: 'Novela',
+    icon: '📗',
+    status: 'reading',
+    progress: 18,
+  },
+  {
+    id: 'reading-5',
+    title: 'Alas de sangre',
+    author: 'Rebecca Yarros',
+    genre: 'Fantasia',
+    icon: '📗',
+    status: 'reading',
+    progress: 57,
+  },
+  {
+    id: 'read-2',
+    title: '1984',
+    author: 'George Orwell',
+    genre: 'Novela',
+    icon: '📘',
+    status: 'read',
+    stars: 5,
+  },
+  {
+    id: 'read-3',
+    title: 'El principito',
+    author: 'Antoine de Saint-Exupery',
+    genre: 'Novela',
+    icon: '📘',
+    status: 'read',
+    stars: 4,
+  },
+  {
+    id: 'read-4',
+    title: 'Sapiens',
+    author: 'Yuval Noah Harari',
+    genre: 'Historia',
+    icon: '📘',
+    status: 'read',
+    stars: 5,
+  },
+  {
+    id: 'read-5',
+    title: 'El marciano',
+    author: 'Andy Weir',
+    genre: 'Ciencia',
+    icon: '📘',
+    status: 'read',
+    stars: 4,
+  },
+  {
+    id: 'read-6',
+    title: 'Orgullo y prejuicio',
+    author: 'Jane Austen',
+    genre: 'Novela',
+    icon: '📘',
+    status: 'read',
+    stars: 4,
+  },
+  // Pack tester fantasia.
+  {
+    id: 'wishlist-8',
+    title: 'El imperio final',
+    author: 'Brandon Sanderson',
+    genre: 'Fantasia',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'wishlist-9',
+    title: 'El temor de un hombre sabio',
+    author: 'Patrick Rothfuss',
+    genre: 'Fantasia',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'reading-6',
+    title: 'El nombre del viento',
+    author: 'Patrick Rothfuss',
+    genre: 'Fantasia',
+    icon: '📗',
+    status: 'reading',
+    progress: 41,
+  },
+  {
+    id: 'read-7',
+    title: 'Harry Potter y la piedra filosofal',
+    author: 'J. K. Rowling',
+    genre: 'Fantasia',
+    icon: '📘',
+    status: 'read',
+    stars: 5,
+  },
+  // Pack tester no ficcion.
+  {
+    id: 'wishlist-10',
+    title: 'Pensar rapido, pensar despacio',
+    author: 'Daniel Kahneman',
+    genre: 'Productividad',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'wishlist-11',
+    title: 'Homo Deus',
+    author: 'Yuval Noah Harari',
+    genre: 'Historia',
+    icon: '📖',
+    status: 'wishlist',
+  },
+  {
+    id: 'reading-7',
+    title: 'La psicologia del dinero',
+    author: 'Morgan Housel',
+    genre: 'Productividad',
+    icon: '📗',
+    status: 'reading',
+    progress: 63,
+  },
+  {
+    id: 'read-8',
+    title: 'Una educacion',
+    author: 'Tara Westover',
+    genre: 'Historia',
+    icon: '📘',
+    status: 'read',
+    stars: 4,
+  },
 ]
 
 interface LibraryContextValue {
@@ -101,10 +281,14 @@ interface LibraryContextValue {
   markBookAsRead: (bookId: string) => void
   updateBookProgress: (bookId: string, progress: number) => void
   updateBookStars: (bookId: string, stars: 1 | 2 | 3 | 4 | 5) => void
+  updateBookNote: (bookId: string, note: string) => void
+  yearlyGoal: number
+  setYearlyGoal: (goal: number) => void
   addBook: (input: {
     title: string
     author: string
     genre?: string
+    note?: string
     coverUrl?: string
     status: LibraryCard['status']
     stars?: number
@@ -124,6 +308,8 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
   const [books, setBooks] = useLocalStorage<LibraryCard[]>('readink.library.v1', INITIAL_BOOKS)
   // Lista de ids del Top 10 (persistida en localStorage).
   const [top10BookIds, setTop10BookIds] = useLocalStorage<string[]>('readink.top10.v1', [])
+  // Meta anual de lectura configurable por el usuario.
+  const [yearlyGoal, setYearlyGoalStorage] = useLocalStorage<number>('readink.yearly-goal.v1', 12)
   // Vista activa compartida para filtrar columnas.
   const [activeView, setActiveView] = useState<LibraryView>('all')
   // Libro seleccionado para resaltar la tarjeta.
@@ -196,6 +382,34 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
     setOpenedBookId(null)
   }, [])
 
+  // Guarda una nota corta en el libro seleccionado.
+  const updateBookNote = useCallback(
+    (bookId: string, note: string) => {
+      const cleanNote = note.trim()
+      setBooks((prevBooks) =>
+        prevBooks.map((book) => {
+          if (book.id !== bookId) {
+            return book
+          }
+          return {
+            ...book,
+            note: cleanNote || undefined,
+          }
+        }),
+      )
+    },
+    [setBooks],
+  )
+
+  // Normaliza la meta anual para evitar valores raros.
+  const setYearlyGoal = useCallback(
+    (goal: number) => {
+      const safeGoal = Math.min(200, Math.max(1, Math.round(goal)))
+      setYearlyGoalStorage(safeGoal)
+    },
+    [setYearlyGoalStorage],
+  )
+
   // Cambia un libro de "wishlist" o "read" a "reading".
   const markBookAsReading = useCallback(
     (bookId: string) => {
@@ -215,6 +429,8 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
             progress: 0,
             // Si venia de leido, limpiamos estrellas porque ya no esta finalizado.
             stars: undefined,
+            // Al salir de leido, quitamos fecha de finalizacion anual.
+            finishedAt: undefined,
           }
         }),
       )
@@ -263,6 +479,8 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
             status: 'read',
             // Al pasar a leido quitamos progreso.
             progress: undefined,
+            // Guardamos fecha para estadisticas anuales.
+            finishedAt: new Date().toISOString(),
           }
         }),
       )
@@ -315,6 +533,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       title: string
       author: string
       genre?: string
+      note?: string
       coverUrl?: string
       status: LibraryCard['status']
       stars?: number
@@ -331,7 +550,10 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
         title: input.title,
         author: input.author,
         genre: input.genre,
+        note: input.note?.trim() || undefined,
         coverUrl: input.coverUrl,
+        createdAt: new Date().toISOString(),
+        finishedAt: input.status === 'read' ? new Date().toISOString() : undefined,
         status: input.status,
         icon: iconByStatus[input.status],
         // Solo guardamos estrellas si viene valor y el estado es "read".
@@ -397,6 +619,9 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       markBookAsRead,
       updateBookProgress,
       updateBookStars,
+      updateBookNote,
+      yearlyGoal,
+      setYearlyGoal,
       addBook,
       addToTop10,
       removeFromTop10,
@@ -420,6 +645,9 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       markBookAsRead,
       updateBookProgress,
       updateBookStars,
+      updateBookNote,
+      yearlyGoal,
+      setYearlyGoal,
       addBook,
       addToTop10,
       removeFromTop10,
