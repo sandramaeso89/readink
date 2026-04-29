@@ -110,6 +110,7 @@ export function LibraryPage() {
     handleSelectBook,
     handleCloseModal,
     markBookAsReading,
+    markBookAsWishlist,
     markBookAsRead,
     updateBookProgress,
     updateBookStars,
@@ -273,6 +274,17 @@ export function LibraryPage() {
                 >
                   Marcar como leido
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    markBookAsWishlist(openedBook.id)
+                    handleCloseModal()
+                  }}
+                  className="ml-2 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-2 text-xs font-medium text-[var(--ri-text-secondary)]"
+                >
+                  Marcar como quiero leer
+                </button>
               </div>
             ) : null}
 
@@ -293,23 +305,39 @@ export function LibraryPage() {
             ) : null}
 
             {openedBook.status === 'read' ? (
-              <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-                <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Valoracion</p>
-                <div className="mt-2 flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => updateBookStars(openedBook.id, star as 1 | 2 | 3 | 4 | 5)}
-                      className={`text-lg transition-colors ${
-                        (openedBook.stars ?? 0) >= star ? 'text-[var(--ri-accent)]' : 'text-[#555]'
-                      }`}
-                    >
-                      ★
-                    </button>
-                  ))}
+              <>
+                <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+                  <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Valoracion</p>
+                  <div className="mt-2 flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => updateBookStars(openedBook.id, star as 1 | 2 | 3 | 4 | 5)}
+                        className={`text-lg transition-colors ${
+                          (openedBook.stars ?? 0) >= star ? 'text-[var(--ri-accent)]' : 'text-[#555]'
+                        }`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+
+                <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+                  {/* Accion rapida para mover el libro de leido a leyendo. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markBookAsReading(openedBook.id)
+                      handleCloseModal()
+                    }}
+                    className="rounded-md border border-[#164e63] bg-[#07141d] px-4 py-2 text-xs font-medium text-[var(--ri-reading)]"
+                  >
+                    Marcar como leyendo
+                  </button>
+                </div>
+              </>
             ) : null}
           </div>
         ) : null}

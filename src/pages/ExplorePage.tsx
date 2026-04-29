@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useLibraryContext } from '../context/LibraryContext'
 
 interface SuggestedBook {
@@ -229,6 +230,15 @@ export function ExplorePage() {
             </article>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6">
+        <Link
+          to="/"
+          className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-2 text-xs text-[var(--ri-text-secondary)] transition-colors hover:border-[#6b4f28]"
+        >
+          Volver a biblioteca
+        </Link>
       </div>
     </section>
   )

@@ -18,7 +18,7 @@ Estado actual: frontend en React + TypeScript con layout minimalista oscuro, est
 ## Scripts
 
 ```bash
-npm run dev      # desarrollo (Vite)
+# desarrollo (Vite)
 npm run build    # compilación para producción
 npm run preview  # vista previa del build
 npm run lint     # ESLint
@@ -82,6 +82,7 @@ En la columna `Leyendo`, al abrir el resumen de un libro ahora aparece la accion
 
 - `Marcar como leido` (mueve el libro de `reading` a `read`).
 - `Guardar progreso` para actualizar el porcentaje de avance (0% a 100%).
+- `Volver a quiero leer` (mueve el libro de `reading` a `wishlist`).
 
 En la columna `Quiero leer`, al abrir el resumen de un libro ahora aparece:
 

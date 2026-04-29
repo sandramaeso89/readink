@@ -97,6 +97,7 @@ interface LibraryContextValue {
   handleSelectBook: (bookId: string) => void
   handleCloseModal: () => void
   markBookAsReading: (bookId: string) => void
+  markBookAsWishlist: (bookId: string) => void
   markBookAsRead: (bookId: string) => void
   updateBookProgress: (bookId: string, progress: number) => void
   updateBookStars: (bookId: string, stars: 1 | 2 | 3 | 4 | 5) => void
@@ -195,7 +196,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
     setOpenedBookId(null)
   }, [])
 
-  // Cambia un libro de "wishlist" a "reading".
+  // Cambia un libro de "wishlist" o "read" a "reading".
   const markBookAsReading = useCallback(
     (bookId: string) => {
       setBooks((prevBooks) =>
@@ -203,7 +204,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
           if (book.id !== bookId) {
             return book
           }
-          if (book.status !== 'wishlist') {
+          if (book.status !== 'wishlist' && book.status !== 'read') {
             return book
           }
 
@@ -212,6 +213,32 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
             status: 'reading',
             // Al empezar lectura, iniciamos en 0%.
             progress: 0,
+            // Si venia de leido, limpiamos estrellas porque ya no esta finalizado.
+            stars: undefined,
+          }
+        }),
+      )
+    },
+    [setBooks],
+  )
+
+  // Cambia un libro de "reading" a "wishlist".
+  const markBookAsWishlist = useCallback(
+    (bookId: string) => {
+      setBooks((prevBooks) =>
+        prevBooks.map((book) => {
+          if (book.id !== bookId) {
+            return book
+          }
+          if (book.status !== 'reading') {
+            return book
+          }
+
+          return {
+            ...book,
+            status: 'wishlist',
+            // Al volver a quiero leer, quitamos progreso.
+            progress: undefined,
           }
         }),
       )
@@ -366,6 +393,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       handleSelectBook,
       handleCloseModal,
       markBookAsReading,
+      markBookAsWishlist,
       markBookAsRead,
       updateBookProgress,
       updateBookStars,
@@ -388,6 +416,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       handleSelectBook,
       handleCloseModal,
       markBookAsReading,
+      markBookAsWishlist,
       markBookAsRead,
       updateBookProgress,
       updateBookStars,

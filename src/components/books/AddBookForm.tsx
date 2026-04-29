@@ -3,6 +3,9 @@ import { useLibraryContext, type LibraryCard } from '../../context/LibraryContex
 
 type FormStatus = 'idle' | 'success' | 'error'
 
+const fieldClassName =
+  'h-11 w-full rounded-lg border border-[var(--ri-border)] bg-[#0f0f0f] px-4 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]'
+
 interface AddBookFormProps {
   // Callback opcional para cerrar modal tras guardar correctamente.
   onSuccess?: () => void
@@ -61,14 +64,15 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4 md:p-5"
+      className="rounded-xl border border-[var(--ri-border)] bg-[var(--ri-surface)] p-6 shadow-xl shadow-black/30 md:p-7"
     >
-      <p className="mb-4 text-[11px] uppercase tracking-[1.5px] text-[var(--ri-accent)]">Reading</p>
+      <p className="mb-2 text-[11px] uppercase tracking-[1.8px] text-[var(--ri-accent)]">Reading</p>
+      <h3 className="mb-5 text-xl font-medium text-[var(--ri-text-primary)]">Anadir libro</h3>
 
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div>
-          <label htmlFor="book-title" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
+          <label htmlFor="book-title" className="mb-1.5 block text-xs text-[var(--ri-text-muted)]">
             Titulo
           </label>
           <input
@@ -77,12 +81,12 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Ej: El alquimista"
-            className="w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]"
+            className={fieldClassName}
           />
         </div>
 
         <div>
-          <label htmlFor="book-author" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
+          <label htmlFor="book-author" className="mb-1.5 block text-xs text-[var(--ri-text-muted)]">
             Autor
           </label>
           <input
@@ -91,19 +95,19 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
             value={author}
             onChange={(event) => setAuthor(event.target.value)}
             placeholder="Ej: Paulo Coelho"
-            className="w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]"
+            className={fieldClassName}
           />
         </div>
 
         <div>
-          <label htmlFor="book-status" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
+          <label htmlFor="book-status" className="mb-1.5 block text-xs text-[var(--ri-text-muted)]">
             Estado inicial
           </label>
           <select
             id="book-status"
             value={status}
             onChange={(event) => setStatus(event.target.value as LibraryCard['status'])}
-            className="w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]"
+            className={fieldClassName}
           >
             <option value="wishlist">Quiero leer</option>
             <option value="reading">Leyendo</option>
@@ -112,14 +116,14 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
         </div>
 
         <div>
-          <label htmlFor="book-genre" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
+          <label htmlFor="book-genre" className="mb-1.5 block text-xs text-[var(--ri-text-muted)]">
             Genero
           </label>
           <select
             id="book-genre"
             value={genre}
             onChange={(event) => setGenre(event.target.value)}
-            className="w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]"
+            className={fieldClassName}
           >
             <option value="Novela">Novela</option>
             <option value="Fantasia">Fantasia</option>
@@ -132,14 +136,14 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
 
         {status === 'read' ? (
           <div>
-            <label htmlFor="book-stars" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
+            <label htmlFor="book-stars" className="mb-1.5 block text-xs text-[var(--ri-text-muted)]">
               Estrellas
             </label>
             <select
               id="book-stars"
               value={stars}
               onChange={(event) => setStars(Number(event.target.value))}
-              className="w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]"
+              className={fieldClassName}
             >
               <option value={1}>1 estrella</option>
               <option value={2}>2 estrellas</option>
@@ -151,12 +155,12 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div className="mt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <button
           type="submit"
-          className="rounded-md bg-[var(--ri-accent)] px-4 py-2 text-xs font-medium text-[var(--ri-bg)]"
+          className="rounded-lg bg-[var(--ri-accent)] px-5 py-3 text-sm font-medium text-[var(--ri-bg)] shadow-md shadow-[#00000066]"
         >
-          Guardar libro
+          Añadir libro
         </button>
 
         {formStatus === 'idle' ? null : (

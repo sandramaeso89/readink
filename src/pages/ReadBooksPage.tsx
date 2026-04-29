@@ -23,7 +23,7 @@ export function ReadBooksPage() {
         Aqui puedes gestionar tus leidos y construir tu Top 10 personal.
       </p>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Todos los leidos</h2>
@@ -77,7 +77,7 @@ export function ReadBooksPage() {
           ) : null}
         </div>
 
-        <div className="lg:sticky lg:top-6 lg:self-start">
+        <div className="md:sticky md:top-6 md:self-start">
           <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-5">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-sm uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Top 10</h2>

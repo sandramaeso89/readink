@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useLibraryContext } from '../context/LibraryContext'
 
 // Pagina "Estadisticas" (ruta "/estadisticas"): resumen visual de lectura.
@@ -50,93 +51,108 @@ export function StatsPage() {
       </h1>
       <p className="mb-6 text-sm text-[var(--ri-text-muted)]">Resumen general de tu biblioteca personal.</p>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="text-xs text-[var(--ri-text-muted)]">Total</p>
-          <p className="mt-1 text-2xl text-[var(--ri-text-primary)]">{counts.total}</p>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_360px]">
+        <div>
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs text-[var(--ri-text-muted)]">Total</p>
+              <p className="mt-1 text-2xl text-[var(--ri-text-primary)]">{counts.total}</p>
+            </div>
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs text-[var(--ri-text-muted)]">Leidos</p>
+              <p className="mt-1 text-2xl text-[var(--ri-accent)]">{counts.read}</p>
+            </div>
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs text-[var(--ri-text-muted)]">Leyendo</p>
+              <p className="mt-1 text-2xl text-[var(--ri-reading)]">{counts.reading}</p>
+            </div>
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs text-[var(--ri-text-muted)]">Quiero leer</p>
+              <p className="mt-1 text-2xl text-[var(--ri-text-primary)]">{counts.wishlist}</p>
+            </div>
+          </div>
+
+          <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Progreso de lectura</p>
+              <p className="mt-2 text-sm text-[var(--ri-text-secondary)]">
+                Leidos: <span className="text-[var(--ri-accent)]">{readPercent}%</span>
+              </p>
+              <p className="text-sm text-[var(--ri-text-secondary)]">
+                En progreso: <span className="text-[var(--ri-reading)]">{readingPercent}%</span>
+              </p>
+            </div>
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Valoracion media</p>
+              <p className="mt-2 text-sm text-[var(--ri-text-secondary)]">
+                {ratingAverage ? `${ratingAverage}/5` : 'Aun no hay valoraciones'}
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="mb-2 text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Top autores</p>
+              {topAuthors.length === 0 ? (
+                <p className="text-sm text-[var(--ri-text-muted)]">Sin datos de autores.</p>
+              ) : (
+                <ul className="space-y-1 text-sm text-[var(--ri-text-secondary)]">
+                  {topAuthors.map(([author, amount]) => (
+                    <li key={author}>
+                      {author} · {amount} libro(s)
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+              <p className="mb-2 text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">
+                Generos mas leidos
+              </p>
+              {genreStats.length === 0 ? (
+                <p className="text-sm text-[var(--ri-text-muted)]">Sin datos de genero.</p>
+              ) : (
+                <ul className="space-y-1 text-sm text-[var(--ri-text-secondary)]">
+                  {genreStats.map(([genre, amount]) => (
+                    <li key={genre}>
+                      {genre} · {amount}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="text-xs text-[var(--ri-text-muted)]">Leidos</p>
-          <p className="mt-1 text-2xl text-[var(--ri-accent)]">{counts.read}</p>
-        </div>
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="text-xs text-[var(--ri-text-muted)]">Leyendo</p>
-          <p className="mt-1 text-2xl text-[var(--ri-reading)]">{counts.reading}</p>
-        </div>
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="text-xs text-[var(--ri-text-muted)]">Quiero leer</p>
-          <p className="mt-1 text-2xl text-[var(--ri-text-primary)]">{counts.wishlist}</p>
+
+        <div className="md:sticky md:top-6 md:self-start">
+          <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
+            <p className="mb-2 text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Top 10 actual</p>
+            <p className="mb-2 text-sm text-[var(--ri-text-secondary)]">
+              Libros en Top 10: <span className="text-[var(--ri-accent)]">{top10Books.length}/10</span>
+            </p>
+            {top10Books.length === 0 ? (
+              <p className="text-sm text-[var(--ri-text-muted)]">Todavia no has anadido libros a tu Top 10.</p>
+            ) : (
+              <ul className="space-y-1 text-sm text-[var(--ri-text-secondary)]">
+                {top10Books.slice(0, 3).map((book, index) => (
+                  <li key={book.id}>
+                    #{index + 1} {book.title}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Progreso de lectura</p>
-          <p className="mt-2 text-sm text-[var(--ri-text-secondary)]">
-            Leidos: <span className="text-[var(--ri-accent)]">{readPercent}%</span>
-          </p>
-          <p className="text-sm text-[var(--ri-text-secondary)]">
-            En progreso: <span className="text-[var(--ri-reading)]">{readingPercent}%</span>
-          </p>
-        </div>
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Valoracion media</p>
-          <p className="mt-2 text-sm text-[var(--ri-text-secondary)]">
-            {ratingAverage ? `${ratingAverage}/5` : 'Aun no hay valoraciones'}
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="mb-2 text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Top autores</p>
-          {topAuthors.length === 0 ? (
-            <p className="text-sm text-[var(--ri-text-muted)]">Sin datos de autores.</p>
-          ) : (
-            <ul className="space-y-1 text-sm text-[var(--ri-text-secondary)]">
-              {topAuthors.map(([author, amount]) => (
-                <li key={author}>
-                  {author} · {amount} libro(s)
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-          <p className="mb-2 text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">
-            Generos mas leidos
-          </p>
-          {genreStats.length === 0 ? (
-            <p className="text-sm text-[var(--ri-text-muted)]">Sin datos de genero.</p>
-          ) : (
-            <ul className="space-y-1 text-sm text-[var(--ri-text-secondary)]">
-              {genreStats.map(([genre, amount]) => (
-                <li key={genre}>
-                  {genre} · {amount}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
-        <p className="mb-2 text-xs uppercase tracking-[1.5px] text-[var(--ri-text-muted)]">Top 10 actual</p>
-        <p className="mb-2 text-sm text-[var(--ri-text-secondary)]">
-          Libros en Top 10: <span className="text-[var(--ri-accent)]">{top10Books.length}/10</span>
-        </p>
-        {top10Books.length === 0 ? (
-          <p className="text-sm text-[var(--ri-text-muted)]">Todavia no has anadido libros a tu Top 10.</p>
-        ) : (
-          <ul className="space-y-1 text-sm text-[var(--ri-text-secondary)]">
-            {top10Books.slice(0, 3).map((book, index) => (
-              <li key={book.id}>
-                #{index + 1} {book.title}
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="mt-6">
+        <Link
+          to="/"
+          className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-2 text-xs text-[var(--ri-text-secondary)] transition-colors hover:border-[#6b4f28]"
+        >
+          Volver a biblioteca
+        </Link>
       </div>
     </section>
   )
