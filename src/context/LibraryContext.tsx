@@ -85,6 +85,12 @@ interface LibraryContextValue {
   handleViewChange: (view: LibraryView) => void
   handleSelectBook: (bookId: string) => void
   handleCloseModal: () => void
+  addBook: (input: {
+    title: string
+    author: string
+    status: LibraryCard['status']
+    stars?: number
+  }) => void
 }
 
 const LibraryContext = createContext<LibraryContextValue | null>(null)
@@ -95,7 +101,7 @@ interface LibraryProviderProps {
 
 export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
   // Estado global de libros compartido por toda la app.
-  const [books] = useLocalStorage<LibraryCard[]>('readink.library.v1', INITIAL_BOOKS)
+  const [books, setBooks] = useLocalStorage<LibraryCard[]>('readink.library.v1', INITIAL_BOOKS)
   // Vista activa compartida para filtrar columnas.
   const [activeView, setActiveView] = useState<LibraryView>('all')
   // Libro seleccionado para resaltar la tarjeta.
@@ -156,6 +162,31 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
     setOpenedBookId(null)
   }, [])
 
+  // Crea un nuevo libro en la biblioteca global.
+  const addBook = useCallback(
+    (input: { title: string; author: string; status: LibraryCard['status']; stars?: number }) => {
+      // Icono simple segun el estado para mantener estilo visual.
+      const iconByStatus: Record<LibraryCard['status'], string> = {
+        wishlist: '📖',
+        reading: '📗',
+        read: '📘',
+      }
+
+      const newBook: LibraryCard = {
+        id: `book-${Date.now()}`,
+        title: input.title,
+        author: input.author,
+        status: input.status,
+        icon: iconByStatus[input.status],
+        // Solo guardamos estrellas si viene valor y el estado es "read".
+        stars: input.status === 'read' ? input.stars : undefined,
+      }
+
+      setBooks((prevBooks) => [newBook, ...prevBooks])
+    },
+    [setBooks],
+  )
+
   // Resolvemos el libro abierto actual para el modal.
   const openedBook = useMemo(
     () => books.find((book) => book.id === openedBookId) ?? null,
@@ -175,6 +206,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       handleViewChange,
       handleSelectBook,
       handleCloseModal,
+      addBook,
     }),
     [
       books,
@@ -188,6 +220,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       handleViewChange,
       handleSelectBook,
       handleCloseModal,
+      addBook,
     ],
   )
 

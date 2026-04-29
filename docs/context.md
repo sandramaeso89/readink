@@ -48,7 +48,7 @@ Asi, todo lo que esta dentro de la app puede usar el contexto.
 Creamos el hook `useLibraryContext` para consumirlo de forma segura.
 
 Se usa en:
-- `src/App.tsx` (layout principal, columnas y modal),
+- `src/pages/LibraryPage.tsx` (pantalla de biblioteca, columnas y modal),
 - `src/components/books/LibraryStats.tsx` (tarjetas de metricas).
 
 ## Cuando es util usar Context API

@@ -1,6 +1,6 @@
 # Readink
 
-**Tu tracker personal de lectura.** Web para organizar libros en tres estados (quiero leer / leyendo / leídos), con notas y valoraciones, usando metadatos reales vía [Open Library](https://openlibrary.org/).
+**Tu Web personal de lectura.** Web para organizar libros en tres estados (quiero leer / leyendo / leídos), con notas y valoraciones, usando metadatos reales vía [Open Library](https://openlibrary.org/).
 
 Estado actual: frontend en React + TypeScript con layout minimalista oscuro, estilos con Tailwind y practica de hooks modernos.
 
@@ -55,6 +55,7 @@ Se implemento estado global compartido usando Context API para evitar prop drill
 Documentacion detallada:
 
 - [Guia de Context API](docs/context.md)
+- La guia tambien explica en que casos conviene usar Context API y cuando es mejor mantener estado local.
 
 ## Rutas y navegación
 
@@ -72,6 +73,21 @@ Configuración central: `src/routes/AppRoutes.tsx`.
 Documentacion detallada:
 
 - [Guia de rutas](docs/routing.md)
+
+## Formularios controlados
+
+Se implemento un formulario controlado para anadir libros usando React:
+
+- Componente: `src/components/books/AddBookForm.tsx`
+- Apertura desde cabecera: boton `+ Anadir libro` en `src/layouts/MainLayout.tsx`
+- Renderizado dentro de modal: `src/components/ui/Modal.tsx`
+- Estado global de guardado: `addBook` en `src/context/LibraryContext.tsx`
+- Incluye validacion basica (titulo y autor obligatorios) y mensajes de error/exito.
+- Si el estado es `Leido`, permite guardar puntuacion con estrellas (1 a 5).
+
+Documentacion detallada:
+
+- [Guia de formularios](docs/forms.md)
 
 ## Identidad visual actual
 
@@ -123,6 +139,7 @@ Estructura preparada para Express: `routes/`, `controllers/`, `services/`, `conf
 - [Hooks en el proyecto](docs/hooks.md)
 - [Context API en el proyecto](docs/context.md)
 - [Rutas y navegación](docs/routing.md)
+- [Formularios controlados](docs/forms.md)
 
 ## Tablero Trello
 
