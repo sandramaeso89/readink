@@ -21,14 +21,14 @@ function coverClasses(status: LibraryCard['status']) {
 // Color del chip del estado dentro de la tarjeta.
 function tagClasses(status: LibraryCard['status']) {
   if (status === 'wishlist') return 'bg-[#1a1000] text-[var(--ri-accent)]'
-  if (status === 'reading') return 'bg-[#07141d] text-[var(--ri-reading)]'
+  if (status === 'reading') return 'bg-[#1a1000] text-[var(--ri-accent)]'
   return 'bg-[#161616] text-[#555]'
 }
 
 // Color del contador (badge) de cada columna.
 function badgeClasses(kind: 'wishlist' | 'reading' | 'read') {
   if (kind === 'wishlist') return 'border-[#7a5010] text-[var(--ri-accent)]'
-  if (kind === 'reading') return 'border-[#164e63] text-[var(--ri-reading)]'
+  if (kind === 'reading') return 'border-[#7a5010] text-[var(--ri-accent)]'
   return 'border-[var(--ri-border)] text-[#777]'
 }
 
@@ -92,7 +92,7 @@ function BookCard({ book, isSelected, onSelect }: BookCardProps) {
       {book.progress ? (
         <div className="mt-2 h-0.5 overflow-hidden rounded-full bg-[var(--ri-border)]">
           <div
-            className="h-full rounded-full bg-[var(--ri-reading)]"
+            className="h-full rounded-full bg-[var(--ri-accent)]"
             style={{ width: `${book.progress}%` }}
           />
         </div>
@@ -373,7 +373,7 @@ export function LibraryPage() {
                     max={100}
                     value={progressDraft}
                     onChange={(event) => setProgressDraft(Number(event.target.value))}
-                    className="h-1 w-full cursor-pointer appearance-none rounded-full bg-[#2a2a2a] accent-[var(--ri-reading)]"
+                    className="h-1 w-full cursor-pointer appearance-none rounded-full bg-[#2a2a2a] accent-[var(--ri-accent)]"
                   />
                   <p className="mt-1 text-xs text-[var(--ri-text-secondary)]">{progressDraft}%</p>
                 </div>
