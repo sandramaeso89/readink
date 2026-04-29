@@ -17,6 +17,7 @@ Versión usada en este proyecto: `react-router-dom` v7 (ver `package.json`).
 | URL | Componente | Archivo |
 |-----|------------|---------|
 | `/` | `LibraryPage` | `src/pages/LibraryPage.tsx` |
+| `/leidos` | `ReadBooksPage` | `src/pages/ReadBooksPage.tsx` |
 | `/explorar` | `ExplorePage` | `src/pages/ExplorePage.tsx` |
 | `/estadisticas` | `StatsPage` | `src/pages/StatsPage.tsx` |
 | `*` (cualquier otra) | `NotFoundPage` | `src/pages/NotFoundPage.tsx` |
@@ -31,6 +32,7 @@ src/
 │   └── MainLayout.tsx      # navbar + <Outlet/>
 ├── pages/
 │   ├── LibraryPage.tsx     # /
+│   ├── ReadBooksPage.tsx   # /leidos
 │   ├── ExplorePage.tsx     # /explorar
 │   ├── StatsPage.tsx       # /estadisticas
 │   └── NotFoundPage.tsx    # *
@@ -102,7 +104,7 @@ Pasos mínimos:
 1. Crear el componente de la página en `src/pages/MiNuevaPagina.tsx`.
 2. Importarlo en `src/routes/AppRoutes.tsx`.
 3. Añadir `<Route path="/mi-ruta" element={<MiNuevaPagina/>} />` dentro del `<Route element={<MainLayout/>}>`.
-4. (Opcional) Añadir el enlace en el array `NAV_LINKS` de `MainLayout.tsx` si quieres que aparezca en el navbar.
+4. (Opcional) Añadir enlace en navbar o en alguna sección existente (por ejemplo, la columna "Leidos" en `LibraryPage.tsx`).
 
 ## Página 404
 

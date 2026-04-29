@@ -64,15 +64,43 @@ La app tiene varias páginas gestionadas con React Router. Cada URL corresponde 
 | URL | Página |
 |-----|--------|
 | `/` | Biblioteca (lista de libros) |
-| `/explorar` | Explorar (placeholder) |
-| `/estadisticas` | Estadísticas (placeholder) |
+| `/leidos` | Leidos (lista completa + Top 10) |
+| `/explorar` | Explorar (recomendaciones segun biblioteca local) |
+| `/estadisticas` | Estadísticas (metricas reales) |
 | `*` | Página 404 |
 
 Configuración central: `src/routes/AppRoutes.tsx`.
 
+Desde la columna `Leidos` en `LibraryPage`, al hacer clic en el titulo se abre la pagina de leidos con:
+
+- listado completo de libros leidos,
+- seccion Top 10 con limite maximo de 10 libros,
+- boton por libro para anadir al Top 10,
+- boton por libro en Top 10 para eliminarlo.
+
+En la columna `Leyendo`, al abrir el resumen de un libro ahora aparece la accion:
+
+- `Marcar como leido` (mueve el libro de `reading` a `read`).
+- `Guardar progreso` para actualizar el porcentaje de avance (0% a 100%).
+
+En la columna `Quiero leer`, al abrir el resumen de un libro ahora aparece:
+
+- `Marcar como leyendo` (mueve el libro de `wishlist` a `reading` con progreso inicial 0%).
+
 Documentacion detallada:
 
 - [Guia de rutas](docs/routing.md)
+
+En `/estadisticas` ahora se muestran metricas reales de lectura:
+
+- resumen global (total, leidos, leyendo, quiero leer),
+- porcentajes de progreso,
+- valoracion media,
+- top autores,
+- distribucion por genero,
+- resumen del Top 10 actual.
+
+En `/explorar` se muestran recomendaciones y sugerencias locales segun tus autores/generos mas usados.
 
 ## Formularios controlados
 
@@ -84,6 +112,7 @@ Se implemento un formulario controlado para anadir libros usando React:
 - Estado global de guardado: `addBook` en `src/context/LibraryContext.tsx`
 - Incluye validacion basica (titulo y autor obligatorios) y mensajes de error/exito.
 - Si el estado es `Leido`, permite guardar puntuacion con estrellas (1 a 5).
+- Las tarjetas ya soportan `coverUrl` para mostrar portadas al conectar Open Library.
 
 Documentacion detallada:
 

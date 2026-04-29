@@ -25,6 +25,7 @@ En `AddBookForm` se gestionan estos estados:
 
 - `title`: titulo del libro
 - `author`: autor del libro
+- `genre`: genero principal del libro
 - `status`: estado inicial (`wishlist`, `reading`, `read`)
 - `stars`: puntuacion de 1 a 5 (solo cuando el estado es `read`)
 
@@ -61,7 +62,7 @@ Mensaje de exito:
 
 1. La usuaria pulsa `+ Anadir libro` en la cabecera.
 2. Se abre un modal con `AddBookForm`.
-3. La usuaria escribe titulo, autor y estado.
+3. La usuaria escribe titulo, autor, genero y estado.
 4. Si elige estado `Leido`, puede elegir estrellas (1-5).
 5. Pulsa "Guardar libro".
 6. React valida campos.

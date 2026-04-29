@@ -7,8 +7,10 @@
 :root {
   --ri-bg: #0a0a0a;
   --ri-surface: #111111;
-  --ri-surface-alt: #0f0f0f;
-  --ri-border: #1e1e1e;
+  /* Superficie alternativa con tono calido para estilo dorado. */
+  --ri-surface-alt: #12100b;
+  /* Borde global dorado suave para paneles y tarjetas. */
+  --ri-border: #3a2a12;
   --ri-text-primary: #ffffff;
   --ri-text-secondary: #e5e5e5;
   --ri-text-muted: #8a8a8a;

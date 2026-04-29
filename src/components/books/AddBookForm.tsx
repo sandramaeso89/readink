@@ -15,6 +15,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
   // Estado controlado de cada input del formulario.
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
+  const [genre, setGenre] = useState('Novela')
   const [status, setStatus] = useState<LibraryCard['status']>('wishlist')
   const [stars, setStars] = useState(5)
 
@@ -38,6 +39,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
     addBook({
       title: cleanTitle,
       author: cleanAuthor,
+      genre,
       status,
       // Solo enviamos estrellas cuando el estado es "leido".
       stars: status === 'read' ? stars : undefined,
@@ -46,6 +48,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
     // Limpiamos inputs para permitir alta rapida de otro libro.
     setTitle('')
     setAuthor('')
+    setGenre('Novela')
     setStatus('wishlist')
     setStars(5)
     setFormStatus('success')
@@ -63,7 +66,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
       <p className="mb-4 text-[11px] uppercase tracking-[1.5px] text-[var(--ri-accent)]">Reading</p>
 
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
         <div>
           <label htmlFor="book-title" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
             Titulo
@@ -105,6 +108,25 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
             <option value="wishlist">Quiero leer</option>
             <option value="reading">Leyendo</option>
             <option value="read">Leido</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="book-genre" className="mb-1 block text-xs text-[var(--ri-text-muted)]">
+            Genero
+          </label>
+          <select
+            id="book-genre"
+            value={genre}
+            onChange={(event) => setGenre(event.target.value)}
+            className="w-full rounded-md border border-[var(--ri-border)] bg-[#0f0f0f] px-3 py-2 text-sm text-[var(--ri-text-secondary)] outline-none transition-colors focus:border-[var(--ri-accent)]"
+          >
+            <option value="Novela">Novela</option>
+            <option value="Fantasia">Fantasia</option>
+            <option value="Historia">Historia</option>
+            <option value="Tecnologia">Tecnologia</option>
+            <option value="Productividad">Productividad</option>
+            <option value="Ciencia">Ciencia</option>
           </select>
         </div>
 
