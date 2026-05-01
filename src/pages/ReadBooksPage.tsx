@@ -1,14 +1,28 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Modal } from '../components/ui/Modal'
-import { type LibraryCard, useLibraryContext } from '../context/LibraryContext'
+import { useLibraryContext } from '../context/useLibraryContext'
+import type { LibraryCard } from '../context/LibraryContext'
 
 // Página exclusiva para libros leídos y sección Top 10.
 export function ReadBooksPage() {
-  const { readBooks, top10BookIds, top10Books, addToTop10, removeFromTop10, updateBookStars } =
+  const {
+    readBooks,
+    top10BookIds,
+    top10Books,
+    booksLoading,
+    booksError,
+    retryLoadBooks,
+    addToTop10,
+    removeFromTop10,
+    updateBookStars,
+    deleteBookById,
+  } =
     useLibraryContext()
   // Libro seleccionado para abrir su resumen en modal.
   const [openedBook, setOpenedBook] = useState<LibraryCard | null>(null)
+  // Guarda el id del libro pendiente de confirmar eliminación.
+  const [bookIdToDelete, setBookIdToDelete] = useState<string | null>(null)
 
   // Mensaje simple para avisar cuando Top 10 ya está completo.
   const isTop10Full = top10BookIds.length >= 10
@@ -22,6 +36,25 @@ export function ReadBooksPage() {
       <p className="mb-6 text-sm text-[var(--ri-text-muted)]">
         Aquí puedes gestionar tus leídos y construir tu Top 10 personal.
       </p>
+
+      {booksLoading ? (
+        <div className="mb-4 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-3">
+          <p className="text-sm text-[var(--ri-text-muted)]">Cargando libros leídos...</p>
+        </div>
+      ) : null}
+
+      {booksError ? (
+        <div className="mb-4 rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-3">
+          <p className="text-sm text-[#ff9b9b]">{booksError}</p>
+          <button
+            type="button"
+            onClick={() => void retryLoadBooks()}
+            className="mt-2 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-3 py-1.5 text-xs text-[var(--ri-text-secondary)]"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,1fr)_360px]">
         <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-5">
@@ -56,14 +89,23 @@ export function ReadBooksPage() {
                       ) : null}
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => addToTop10(book.id)}
-                      disabled={isInTop10 || isTop10Full}
-                      className="rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {isInTop10 ? 'Ya en Top 10' : 'Añadir al Top 10'}
-                    </button>
+                    <div className="flex flex-wrap items-center justify-end gap-2 md:flex-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => addToTop10(book.id)}
+                        disabled={isInTop10 || isTop10Full}
+                        className="whitespace-nowrap rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {isInTop10 ? 'Ya en Top 10' : 'Añadir al Top 10'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBookIdToDelete(book.id)}
+                        className="whitespace-nowrap rounded-md border border-[#3a1f1f] bg-[#160b0b] px-3 py-1.5 text-xs font-medium text-[#ff9b9b]"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </article>
                 )
               })}
@@ -93,28 +135,39 @@ export function ReadBooksPage() {
                 {top10Books.map((book, index) => (
                   <article
                     key={book.id}
-                    className="flex flex-col gap-3 rounded-md border border-[var(--ri-border)] bg-[#111] p-3 md:flex-row md:items-center md:justify-between"
+                    className="rounded-md border border-[var(--ri-border)] bg-[#111] p-3"
                   >
-                    <button
-                      type="button"
-                      onClick={() => setOpenedBook(book)}
-                      className="text-left"
-                    >
-                      <p className="text-xs text-[var(--ri-text-muted)]">#{index + 1}</p>
-                      <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
-                      <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
-                      {book.stars ? (
-                        <p className="mt-1 text-xs text-[var(--ri-accent)]">{'★'.repeat(book.stars)}</p>
-                      ) : null}
-                    </button>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setOpenedBook(book)}
+                        className="min-w-0 text-left"
+                      >
+                        <p className="text-xs text-[var(--ri-text-muted)]">#{index + 1}</p>
+                        <p className="line-clamp-2 text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
+                        <p className="truncate text-xs text-[var(--ri-text-muted)]">{book.author}</p>
+                        {book.stars ? (
+                          <p className="mt-1 text-xs text-[var(--ri-accent)]">{'★'.repeat(book.stars)}</p>
+                        ) : null}
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => removeFromTop10(book.id)}
-                      className="rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500]"
-                    >
-                      Eliminar de Top 10
-                    </button>
+                      <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => removeFromTop10(book.id)}
+                        className="whitespace-nowrap rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500]"
+                      >
+                        Eliminar de Top 10
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBookIdToDelete(book.id)}
+                        className="whitespace-nowrap rounded-md border border-[#3a1f1f] bg-[#160b0b] px-3 py-1.5 text-xs font-medium text-[#ff9b9b]"
+                      >
+                        Eliminar libro
+                      </button>
+                      </div>
+                    </div>
                   </article>
                 ))}
               </div>
@@ -166,10 +219,50 @@ export function ReadBooksPage() {
                   </button>
                 ))}
               </div>
+              <button
+                type="button"
+                onClick={() => setBookIdToDelete(openedBook.id)}
+                className="mt-3 rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-2 text-xs font-medium text-[#ff9b9b]"
+              >
+                Eliminar libro
+              </button>
             </div>
 
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        isOpen={bookIdToDelete !== null}
+        title="Confirmar eliminación"
+        onClose={() => setBookIdToDelete(null)}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--ri-text-secondary)]">
+            ¿Seguro que quieres eliminar este libro? Esta acción no se puede deshacer.
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBookIdToDelete(null)}
+              className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-2 text-xs font-medium text-[var(--ri-text-secondary)]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!bookIdToDelete) return
+                deleteBookById(bookIdToDelete)
+                setBookIdToDelete(null)
+                setOpenedBook(null)
+              }}
+              className="rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-2 text-xs font-medium text-[#ff9b9b]"
+            >
+              Eliminar libro
+            </button>
+          </div>
+        </div>
       </Modal>
     </section>
   )

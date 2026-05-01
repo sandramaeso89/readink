@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { LibraryStats } from '../components/books/LibraryStats'
 import { Modal } from '../components/ui/Modal'
-import { type LibraryCard, useLibraryContext } from '../context/LibraryContext'
+import { useLibraryContext } from '../context/useLibraryContext'
+import type { LibraryCard } from '../context/LibraryContext'
 
 // Texto visible del estado del libro.
 function statusLabel(status: LibraryCard['status']) {
@@ -36,13 +37,14 @@ interface BookCardProps {
   readonly book: LibraryCard
   readonly isSelected: boolean
   readonly onSelect: (bookId: string) => void
+  readonly onDeleteRequest: (bookId: string) => void
 }
 
 type LibrarySort = 'recent' | 'title' | 'rating' | 'progress'
 
 // Tarjeta individual de libro. Es un <button> para accesibilidad
 // (se puede activar con click, Enter o Espacio).
-function BookCard({ book, isSelected, onSelect }: BookCardProps) {
+function BookCard({ book, isSelected, onSelect, onDeleteRequest }: BookCardProps) {
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -51,53 +53,68 @@ function BookCard({ book, isSelected, onSelect }: BookCardProps) {
   }
 
   return (
-    <button
-      type="button"
-      className={`mb-2.5 flex h-[205px] w-full cursor-pointer flex-col rounded-md border bg-[var(--ri-surface)] p-3.5 text-left transition-colors ${
+    <article
+      className={`relative mb-2.5 flex w-full flex-col rounded-md border bg-[#111] p-3 text-left transition-colors ${
         isSelected ? 'border-[var(--ri-accent)]' : 'border-[var(--ri-border)] hover:border-[#6b4f28]'
       }`}
-      onClick={() => onSelect(book.id)}
-      onKeyDown={handleKeyDown}
     >
-      <div
-        className={`mb-2.5 flex h-20 items-center justify-center rounded-md ${coverClasses(book.status)}`}
+      <div className="mb-2 flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => onDeleteRequest(book.id)}
+          className="rounded-md border border-[#3a1f1f] bg-[#160b0b] px-2 py-1 text-[10px] text-[#ff9b9b]"
+        >
+          Eliminar
+        </button>
+      </div>
+      <button
+        type="button"
+        className="flex w-full cursor-pointer flex-col text-left"
+        onClick={() => onSelect(book.id)}
+        onKeyDown={handleKeyDown}
       >
-        {book.coverUrl ? (
-          <img
-            src={book.coverUrl}
-            alt={`Portada de ${book.title}`}
-            className="h-full w-full rounded-md object-cover"
-          />
-        ) : (
-          <span className="text-3xl opacity-40">{book.icon}</span>
-        )}
-      </div>
-      <h3 className="mb-1 line-clamp-2 min-h-9 text-[13px] font-medium text-[var(--ri-text-secondary)]">
-        {book.title}
-      </h3>
-      <p className="mb-2 truncate text-[11px] text-[var(--ri-text-muted)]">{book.author}</p>
-      {book.note ? (
-        <p className="line-clamp-2 text-[10px] text-[var(--ri-text-muted)]">"{book.note}"</p>
-      ) : null}
-      <div className="mt-auto flex items-center justify-between">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] ${tagClasses(book.status)}`}>
-          {statusLabel(book.status)}
-        </span>
-        {book.stars ? (
-          <span className="text-[10px] tracking-[-1px] text-[var(--ri-accent)]">
-            {'★'.repeat(book.stars)}
-          </span>
-        ) : null}
-      </div>
-      {book.progress ? (
-        <div className="mt-2 h-0.5 overflow-hidden rounded-full bg-[var(--ri-border)]">
+        <div className="flex items-start gap-3">
           <div
-            className="h-full rounded-full bg-[var(--ri-accent)]"
-            style={{ width: `${book.progress}%` }}
-          />
+            className={`flex h-16 w-12 shrink-0 items-center justify-center rounded-md ${coverClasses(book.status)}`}
+          >
+            {book.coverUrl ? (
+              <img
+                src={book.coverUrl}
+                alt={`Portada de ${book.title}`}
+                className="h-full w-full rounded-md object-cover"
+              />
+            ) : (
+              <span className="text-xl opacity-60">{book.icon}</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <h3 className="line-clamp-2 text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</h3>
+            <p className="mt-0.5 truncate text-xs text-[var(--ri-text-muted)]">{book.author}</p>
+            {book.note ? (
+              <p className="mt-1 line-clamp-2 text-[10px] text-[var(--ri-text-muted)]">"{book.note}"</p>
+            ) : null}
+          </div>
         </div>
-      ) : null}
-    </button>
+        <div className="mt-3 flex items-center justify-between">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] ${tagClasses(book.status)}`}>
+            {statusLabel(book.status)}
+          </span>
+          {book.stars ? (
+            <span className="text-[10px] tracking-[-1px] text-[var(--ri-accent)]">
+              {'★'.repeat(book.stars)}
+            </span>
+          ) : null}
+        </div>
+        {book.progress ? (
+          <div className="mt-2 h-0.5 overflow-hidden rounded-full bg-[var(--ri-border)]">
+            <div
+              className="h-full rounded-full bg-[var(--ri-accent)]"
+              style={{ width: `${book.progress}%` }}
+            />
+          </div>
+        ) : null}
+      </button>
+    </article>
   )
 }
 
@@ -106,6 +123,9 @@ function BookCard({ book, isSelected, onSelect }: BookCardProps) {
 export function LibraryPage() {
   // Estado global: libros, listas filtradas y handlers del modal.
   const {
+    booksLoading,
+    booksError,
+    retryLoadBooks,
     selectedBookId,
     openedBook,
     counts,
@@ -120,6 +140,7 @@ export function LibraryPage() {
     updateBookProgress,
     updateBookStars,
     updateBookNote,
+    deleteBookById,
   } = useLibraryContext()
   // Valor temporal del slider para editar progreso antes de guardar.
   const [progressDraft, setProgressDraft] = useState(0)
@@ -130,23 +151,26 @@ export function LibraryPage() {
   const [genreFilter, setGenreFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<'all' | LibraryCard['status']>('all')
   const [sortBy, setSortBy] = useState<LibrarySort>('recent')
+  // Guarda el id del libro pendiente de confirmar eliminación.
+  const [bookIdToDelete, setBookIdToDelete] = useState<string | null>(null)
 
   // Mantiene el titulo de la pestaña al dia con el total de libros.
   useEffect(() => {
     document.title = `Readink · ${counts.total} libros`
   }, [counts.total])
 
-  // Cuando cambia el libro abierto, sincronizamos el slider.
-  useEffect(() => {
-    if (openedBook?.status === 'reading') {
-      setProgressDraft(openedBook.progress ?? 0)
-    }
-  }, [openedBook])
+  // Prepara los borradores antes de abrir el modal para evitar setState en useEffect.
+  const handleSelectBookWithDraft = useCallback(
+    (bookId: string) => {
+      const selectedBook = [...wishlistBooks, ...readingBooks, ...readBooks].find((book) => book.id === bookId)
+      if (!selectedBook) return
 
-  // Sincroniza la nota temporal cuando cambias de libro abierto.
-  useEffect(() => {
-    setNoteDraft(openedBook?.note ?? '')
-  }, [openedBook])
+      setProgressDraft(selectedBook.status === 'reading' ? (selectedBook.progress ?? 0) : 0)
+      setNoteDraft(selectedBook.note ?? '')
+      handleSelectBook(bookId)
+    },
+    [wishlistBooks, readingBooks, readBooks, handleSelectBook],
+  )
 
   // Lista de generos para el filtro rapido.
   const availableGenres = useMemo(() => {
@@ -160,7 +184,7 @@ export function LibraryPage() {
   }, [wishlistBooks, readingBooks, readBooks])
 
   // Reglas unificadas para filtrar y ordenar cada columna.
-  const filterAndSortBooks = (books: LibraryCard[]) => {
+  const filterAndSortBooks = useCallback((books: LibraryCard[]) => {
     const query = searchTerm.trim().toLowerCase()
     const filtered = books.filter((book) => {
       if (statusFilter !== 'all' && book.status !== statusFilter) {
@@ -193,11 +217,11 @@ export function LibraryPage() {
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0
       return bDate - aDate
     })
-  }
+  }, [searchTerm, statusFilter, genreFilter, sortBy])
 
-  const visibleWishlistBooks = useMemo(() => filterAndSortBooks(wishlistBooks), [wishlistBooks, searchTerm, genreFilter, statusFilter, sortBy])
-  const visibleReadingBooks = useMemo(() => filterAndSortBooks(readingBooks), [readingBooks, searchTerm, genreFilter, statusFilter, sortBy])
-  const visibleReadBooks = useMemo(() => filterAndSortBooks(readBooks), [readBooks, searchTerm, genreFilter, statusFilter, sortBy])
+  const visibleWishlistBooks = useMemo(() => filterAndSortBooks(wishlistBooks), [wishlistBooks, filterAndSortBooks])
+  const visibleReadingBooks = useMemo(() => filterAndSortBooks(readingBooks), [readingBooks, filterAndSortBooks])
+  const visibleReadBooks = useMemo(() => filterAndSortBooks(readBooks), [readBooks, filterAndSortBooks])
 
   return (
     <>
@@ -212,6 +236,29 @@ export function LibraryPage() {
           {counts.total} libros registrados · {counts.reading} en progreso
         </p>
       </section>
+
+      {booksLoading ? (
+        <section className="px-8 pb-5">
+          <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-4">
+            <p className="text-sm text-[var(--ri-text-muted)]">Cargando biblioteca...</p>
+          </div>
+        </section>
+      ) : null}
+
+      {booksError ? (
+        <section className="px-8 pb-5">
+          <div className="rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-4">
+            <p className="text-sm text-[#ff9b9b]">{booksError}</p>
+            <button
+              type="button"
+              onClick={() => void retryLoadBooks()}
+              className="mt-2 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-3 py-1.5 text-xs text-[var(--ri-text-secondary)]"
+            >
+              Reintentar
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       <LibraryStats />
 
@@ -272,7 +319,8 @@ export function LibraryPage() {
               key={book.id}
               book={book}
               isSelected={selectedBookId === book.id}
-              onSelect={handleSelectBook}
+              onSelect={handleSelectBookWithDraft}
+              onDeleteRequest={setBookIdToDelete}
             />
           ))}
           {visibleWishlistBooks.length === 0 ? (
@@ -297,7 +345,8 @@ export function LibraryPage() {
               key={book.id}
               book={book}
               isSelected={selectedBookId === book.id}
-              onSelect={handleSelectBook}
+              onSelect={handleSelectBookWithDraft}
+              onDeleteRequest={setBookIdToDelete}
             />
           ))}
           {visibleReadingBooks.length === 0 ? (
@@ -326,7 +375,8 @@ export function LibraryPage() {
               key={book.id}
               book={book}
               isSelected={selectedBookId === book.id}
-              onSelect={handleSelectBook}
+              onSelect={handleSelectBookWithDraft}
+              onDeleteRequest={setBookIdToDelete}
             />
           ))}
           {visibleReadBooks.length === 0 ? (
@@ -482,9 +532,49 @@ export function LibraryPage() {
               >
                 Guardar nota
               </button>
+              <button
+                type="button"
+                onClick={() => setBookIdToDelete(openedBook.id)}
+                className="ml-2 mt-3 rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-2 text-xs font-medium text-[#ff9b9b]"
+              >
+                Eliminar libro
+              </button>
             </div>
           </div>
         ) : null}
+      </Modal>
+
+      <Modal
+        isOpen={bookIdToDelete !== null}
+        title="Confirmar eliminación"
+        onClose={() => setBookIdToDelete(null)}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--ri-text-secondary)]">
+            ¿Seguro que quieres eliminar este libro? Esta acción no se puede deshacer.
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setBookIdToDelete(null)}
+              className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-2 text-xs font-medium text-[var(--ri-text-secondary)]"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!bookIdToDelete) return
+                deleteBookById(bookIdToDelete)
+                setBookIdToDelete(null)
+                handleCloseModal()
+              }}
+              className="rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-2 text-xs font-medium text-[#ff9b9b]"
+            >
+              Eliminar libro
+            </button>
+          </div>
+        </div>
       </Modal>
     </>
   )

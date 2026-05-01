@@ -5,7 +5,7 @@
 - **Navbar** — navegación entre páginas
 - **BookCard** — tarjeta de cada libro (portada, título, autor, estado)
 - **BookList** — lista de libros por sección
-- **SearchBar** — buscador conectado a Open Library API
+- **SearchBar / AddBookForm** — buscador conectado a Open Library vía backend
 - **StarRating** — valoración de 1 a 5 estrellas (solo en "Leídos")
 - **NoteModal** — modal para escribir notas personales
 - **StatusBadge** — etiqueta de estado del libro
@@ -30,30 +30,39 @@ en distintas páginas de la aplicación.
 | POST   | /api/v1/books      | Añadir un libro a una lista        |
 | PATCH  | /api/v1/books/:id  | Editar lista, nota o valoración    |
 | DELETE | /api/v1/books/:id  | Eliminar un libro                  |
+| GET    | /api/v1/openlibrary/search?q=... | Buscar libros en Open Library (normalizado y filtrado por español) |
 
 ## Persistencia de datos
 
 | Dato                        | Dónde          |
 |-----------------------------|----------------|
-| Libros guardados            | Backend         |
-| Resultados de búsqueda      | Solo cliente    |
+| Libros guardados            | Backend (API /books) |
+| Resultados de búsqueda Open Library | Backend (API /openlibrary/search) |
+| Top 10 y objetivo anual     | LocalStorage (temporal) |
 | Estado de modales           | Solo cliente    |
 
 ## Flujo de datos
 
-Usuario → Frontend (React) → API Client (src/api/client.ts) → Backend (Express)
-Frontend → Open Library API (búsqueda externa)
+Usuario → Frontend (React) → API Client (`src/api/client.ts`) → Backend (Express)
+Backend → Open Library API (proxy de búsqueda y filtro de idioma español)
 
 ## Diagrama de flujo de datos
 
 ```mermaid
 flowchart LR
   U[Usuario] --> FE[Frontend React]
-  FE -->|Buscar libros| OL[Open Library API]
-  FE -->|CRUD biblioteca| API[/API Express /api/v1/]
+  FE -->|CRUD biblioteca y búsqueda| API[/API Express /api/v1/]
+  API -->|Buscar libros| OL[Open Library API]
   API --> DB[(Persistencia servidor)]
-  FE --> LS[(LocalStorage - modo MVP)]
+  FE --> LS[(LocalStorage solo UI: top10 y objetivo)]
 ```
 
-En modo MVP sin backend activo, el frontend usa LocalStorage.
-Cuando el backend está activo, el frontend persiste la biblioteca vía `/api/v1/books`.
+La biblioteca usa backend como fuente de verdad (`/api/v1/books`).
+La búsqueda de Open Library también pasa por backend (`/api/v1/openlibrary/search`).
+En frontend, LocalStorage se usa solo para datos de UI temporal (`top10` y `objetivo anual`).
+
+## Notas de UX actuales
+
+- En `Explorar`, las tarjetas muestran portada cuando existe `coverUrl`.
+- Si un libro no tiene portada, se muestra fallback visual premium.
+- Las secciones de explorar incluyen botón `+ Ver más` para cargar más recomendaciones.

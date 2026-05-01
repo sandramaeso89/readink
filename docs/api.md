@@ -189,6 +189,42 @@ Elimina un libro por id.
 }
 ```
 
+### GET `/api/v1/openlibrary/search?q=...`
+
+Busca libros en Open Library pasando por backend y devuelve un formato normalizado.
+
+**Request**
+
+- Query param obligatorio: `q` (mínimo 3 caracteres)
+- Ejemplo: `/api/v1/openlibrary/search?q=harry%20potter`
+
+**Respuesta 200**
+
+```json
+{
+  "data": [
+    {
+      "id": "/works/OL82563W",
+      "title": "Harry Potter and the Philosopher's Stone",
+      "author": "J. K. Rowling",
+      "coverUrl": "https://covers.openlibrary.org/b/id/12345-L.jpg",
+      "firstPublishYear": 1997
+    }
+  ]
+}
+```
+
+**Respuesta 400**
+
+```json
+{
+  "error": "Parámetros inválidos.",
+  "details": [
+    "q debe tener al menos 3 caracteres."
+  ]
+}
+```
+
 ## Errores generales
 
 Si ocurre un error inesperado en servidor:

@@ -7,6 +7,7 @@ import { Modal } from '../components/ui/Modal'
 // Los tenemos en un array para no repetir JSX y poder añadir rutas facil.
 const NAV_LINKS = [
   { to: '/', label: 'Biblioteca', end: true },
+  { to: '/leidos', label: 'Mis libros', end: false },
   { to: '/explorar', label: 'Explorar', end: false },
   { to: '/estadisticas', label: 'Estadísticas', end: false },
 ]

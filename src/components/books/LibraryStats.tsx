@@ -1,4 +1,4 @@
-import { useLibraryContext } from '../../context/LibraryContext'
+import { useLibraryContext } from '../../context/useLibraryContext'
 
 export function LibraryStats() {
   // Leemos métricas globales desde Context para no pasar props.

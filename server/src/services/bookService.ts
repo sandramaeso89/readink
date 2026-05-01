@@ -22,6 +22,7 @@ export const bookService = {
       id: randomUUID(),
       title: input.title,
       author: input.author,
+      coverUrl: input.coverUrl,
       status: input.status,
       rating: input.rating,
       notes: input.notes,
@@ -41,6 +42,7 @@ export const bookService = {
 
     if (input.title !== undefined) book.title = input.title;
     if (input.author !== undefined) book.author = input.author;
+    if (input.coverUrl !== undefined) book.coverUrl = input.coverUrl;
     if (input.status !== undefined) book.status = input.status;
     if (input.rating !== undefined) book.rating = input.rating;
     if (input.notes !== undefined) book.notes = input.notes;

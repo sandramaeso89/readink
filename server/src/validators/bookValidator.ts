@@ -24,6 +24,7 @@ export function validateCreateBook(body: unknown): ValidationResult<CreateBookIn
   const title = body.title;
   const author = body.author;
   const status = body.status;
+  const coverUrl = body.coverUrl;
   const rating = body.rating;
   const notes = body.notes;
   const progress = body.progress;
@@ -39,6 +40,10 @@ export function validateCreateBook(body: unknown): ValidationResult<CreateBookIn
 
   if (typeof status !== "string" || !allowedStatuses.includes(status as ReadingStatus)) {
     errors.push("status debe ser wishlist, reading o read.");
+  }
+
+  if (coverUrl !== undefined && typeof coverUrl !== "string") {
+    errors.push("coverUrl debe ser texto.");
   }
 
   if (rating !== undefined && (typeof rating !== "number" || rating < 1 || rating > 5)) {
@@ -65,6 +70,7 @@ export function validateCreateBook(body: unknown): ValidationResult<CreateBookIn
     data: {
       title: safeTitle.trim(),
       author: safeAuthor.trim(),
+      coverUrl: coverUrl as string | undefined,
       status: safeStatus,
       rating: rating as number | undefined,
       notes: notes as string | undefined,
@@ -103,6 +109,14 @@ export function validateUpdateBook(body: unknown): ValidationResult<UpdateBookIn
       errors.push("status debe ser wishlist, reading o read.");
     } else {
       data.status = body.status as ReadingStatus;
+    }
+  }
+
+  if ("coverUrl" in body) {
+    if (typeof body.coverUrl !== "string") {
+      errors.push("coverUrl debe ser texto.");
+    } else {
+      data.coverUrl = body.coverUrl;
     }
   }
 

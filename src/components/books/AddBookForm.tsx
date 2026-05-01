@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useLibraryContext, type LibraryCard } from '../../context/LibraryContext'
+import { useLibraryContext } from '../../context/useLibraryContext'
+import type { LibraryCard } from '../../context/LibraryContext'
+import { ApiClientError, searchOpenLibrary } from '../../api/client'
+import type { ApiOpenLibraryBook } from '../../types/api'
 
 type FormStatus = 'idle' | 'success' | 'error'
 
@@ -9,14 +12,6 @@ const fieldClassName =
 interface AddBookFormProps {
   // Callback opcional para cerrar modal tras guardar correctamente.
   onSuccess?: () => void
-}
-
-interface OpenLibrarySearchBook {
-  key: string
-  title: string
-  author: string
-  coverUrl?: string
-  genre?: string
 }
 
 const KNOWN_GENRES = ['Novela', 'Fantasía', 'Historia', 'Tecnología', 'Productividad', 'Ciencia'] as const
@@ -47,64 +42,46 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
   const [stars, setStars] = useState(5)
   // Búsqueda simple para autocompletar desde Open Library.
   const [openLibraryQuery, setOpenLibraryQuery] = useState('')
-  const [openLibraryResults, setOpenLibraryResults] = useState<OpenLibrarySearchBook[]>([])
+  const [openLibraryResults, setOpenLibraryResults] = useState<ApiOpenLibraryBook[]>([])
   const [isLoadingOpenLibrary, setIsLoadingOpenLibrary] = useState(false)
+  const [openLibraryError, setOpenLibraryError] = useState('')
 
   // Estado para feedback visual (error o confirmacion).
   const [formStatus, setFormStatus] = useState<FormStatus>('idle')
   const [message, setMessage] = useState('')
 
-  // Busca en Open Library para autocompletar el formulario.
+  // Busca en Open Library vía backend para autocompletar el formulario.
+  const runOpenLibrarySearch = async (queryText: string) => {
+    try {
+      setIsLoadingOpenLibrary(true)
+      setOpenLibraryError('')
+      const results = await searchOpenLibrary(queryText)
+      setOpenLibraryResults(results)
+    } catch (error) {
+      setOpenLibraryResults([])
+      if (error instanceof ApiClientError) {
+        setOpenLibraryError(error.message)
+      } else {
+        setOpenLibraryError('No se pudo buscar en Open Library.')
+      }
+    } finally {
+      setIsLoadingOpenLibrary(false)
+    }
+  }
+
   useEffect(() => {
     const query = openLibraryQuery.trim()
     if (query.length < 3) {
       setOpenLibraryResults([])
+      setOpenLibraryError('')
       return
     }
 
-    const controller = new AbortController()
-    const timeoutId = setTimeout(async () => {
-      try {
-        setIsLoadingOpenLibrary(true)
-        const response = await fetch(
-          `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&limit=5`,
-          { signal: controller.signal },
-        )
-        if (!response.ok) {
-          throw new Error('No se pudo buscar en Open Library')
-        }
-        const data = (await response.json()) as {
-          docs?: Array<{
-            key?: string
-            title?: string
-            author_name?: string[]
-            cover_i?: number
-            subject?: string[]
-          }>
-        }
-        const parsed =
-          data.docs?.map((book) => ({
-            key: book.key ?? `search-${Math.random()}`,
-            title: book.title ?? 'Sin título',
-            author: book.author_name?.[0] ?? 'Autor desconocido',
-            coverUrl: book.cover_i
-              ? `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`
-              : undefined,
-            genre: book.subject?.[0],
-          })) ?? []
-        setOpenLibraryResults(parsed)
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          return
-        }
-        setOpenLibraryResults([])
-      } finally {
-        setIsLoadingOpenLibrary(false)
-      }
+    const timeoutId = setTimeout(() => {
+      void runOpenLibrarySearch(query)
     }, 350)
 
     return () => {
-      controller.abort()
       clearTimeout(timeoutId)
     }
   }, [openLibraryQuery])
@@ -143,6 +120,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
     setStars(5)
     setOpenLibraryQuery('')
     setOpenLibraryResults([])
+    setOpenLibraryError('')
     setFormStatus('success')
     setMessage('Libro añadido correctamente.')
 
@@ -153,7 +131,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border border-[var(--ri-border)] bg-[var(--ri-surface)] p-6 shadow-xl shadow-black/30 md:p-7"
+      className="max-h-[80vh] overflow-y-auto rounded-xl border border-[var(--ri-border)] bg-[var(--ri-surface)] p-6 shadow-xl shadow-black/30 md:p-7"
     >
       <p className="mb-2 text-[11px] uppercase tracking-[1.8px] text-[var(--ri-accent)]">Reading</p>
       <h3 className="mb-5 text-xl font-medium text-[var(--ri-text-primary)]">Añadir libro</h3>
@@ -179,15 +157,16 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
             <div className="mt-2 max-h-44 space-y-2 overflow-y-auto rounded-lg border border-[var(--ri-border)] bg-[#0f0f0f] p-2">
               {openLibraryResults.map((book) => (
                 <button
-                  key={book.key}
+                  key={book.id}
                   type="button"
                   onClick={() => {
                     // Rellena campos para ahorrar escritura manual.
                     setTitle(book.title)
                     setAuthor(book.author)
                     setCoverUrl(book.coverUrl ?? '')
-                    setGenre(normalizeGenre(book.genre))
+                    setGenre(normalizeGenre())
                     setOpenLibraryResults([])
+                    setOpenLibraryError('')
                     setOpenLibraryQuery(book.title)
                   }}
                   className="w-full rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-3 py-2 text-left text-xs text-[var(--ri-text-secondary)] transition-colors hover:border-[#6b4f28]"
@@ -196,6 +175,18 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
                   <span className="block text-[var(--ri-text-muted)]">{book.author}</span>
                 </button>
               ))}
+            </div>
+          ) : null}
+          {openLibraryError ? (
+            <div className="mt-2 rounded-md border border-[#3a1f1f] bg-[#160b0b] p-2">
+              <p className="text-xs text-[#ff9b9b]">{openLibraryError}</p>
+              <button
+                type="button"
+                onClick={() => void runOpenLibrarySearch(openLibraryQuery)}
+                className="mt-1 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-2 py-1 text-[11px] text-[var(--ri-text-secondary)]"
+              >
+                Reintentar búsqueda
+              </button>
             </div>
           ) : null}
         </div>
@@ -240,6 +231,20 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
             placeholder="https://..."
             className={fieldClassName}
           />
+          {coverUrl ? (
+            <div className="mt-2 rounded-md border border-[var(--ri-border)] bg-[#111] p-2">
+              <p className="mb-1 text-[10px] text-[var(--ri-text-muted)]">Vista previa</p>
+              <img
+                src={coverUrl}
+                alt="Vista previa de portada"
+                className="h-16 w-12 rounded object-cover"
+              />
+            </div>
+          ) : (
+            <p className="mt-2 text-[11px] text-[var(--ri-text-muted)]">
+              Este libro no tiene portada disponible en Open Library.
+            </p>
+          )}
         </div>
 
         <div className="md:col-span-2 xl:col-span-3">
@@ -260,6 +265,30 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
           <label htmlFor="book-status" className="mb-1.5 block text-xs text-[var(--ri-text-muted)]">
             Estado inicial
           </label>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatus('reading')}
+              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                status === 'reading'
+                  ? 'border-[#164e63] bg-[#07141d] text-[var(--ri-reading)]'
+                  : 'border-[var(--ri-border)] bg-[var(--ri-surface)] text-[var(--ri-text-secondary)]'
+              }`}
+            >
+              Marcar como leyendo
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus('read')}
+              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                status === 'read'
+                  ? 'border-[#3a2a12] bg-[#1a1000] text-[var(--ri-accent)]'
+                  : 'border-[var(--ri-border)] bg-[var(--ri-surface)] text-[var(--ri-text-secondary)]'
+              }`}
+            >
+              Marcar como leído
+            </button>
+          </div>
           <select
             id="book-status"
             value={status}

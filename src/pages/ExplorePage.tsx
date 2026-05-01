@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useLibraryContext } from '../context/LibraryContext'
+import { useLibraryContext } from '../context/useLibraryContext'
 
 interface SuggestedBook {
   title: string
   author: string
   genre: string
+  coverUrl?: string
 }
 
 interface OpenLibraryWork {
@@ -13,6 +14,7 @@ interface OpenLibraryWork {
   title: string
   authors?: Array<{ name: string }>
   subject?: string[]
+  cover_id?: number
 }
 
 const SUGGESTED_CATALOG: SuggestedBook[] = [
@@ -30,11 +32,15 @@ const SUGGESTED_CATALOG: SuggestedBook[] = [
 
 // Pagina "Explorar" (ruta "/explorar"): sugerencias locales segun biblioteca.
 export function ExplorePage() {
-  const { books, readBooks, addBook } = useLibraryContext()
+  const { books, readBooks, addBook, booksLoading, booksError, retryLoadBooks } = useLibraryContext()
   // Estado de tendencias que llegan desde Open Library.
   const [trendingBooks, setTrendingBooks] = useState<SuggestedBook[]>([])
   const [isLoadingTrends, setIsLoadingTrends] = useState(false)
   const [trendsError, setTrendsError] = useState('')
+  const [trendingVisibleCount, setTrendingVisibleCount] = useState(4)
+  // Cuántas recomendaciones mostramos al inicio en cada bloque.
+  const [recommendedVisibleCount, setRecommendedVisibleCount] = useState(6)
+  const [suggestionsVisibleCount, setSuggestionsVisibleCount] = useState(4)
 
   // Géneros y autores más frecuentes de la biblioteca.
   const profile = useMemo(() => {
@@ -54,6 +60,28 @@ export function ExplorePage() {
     return { topGenres, topAuthors }
   }, [books])
 
+  // Perfil específico de lecturas finalizadas (más señal de gusto real).
+  const readProfile = useMemo(() => {
+    const readGenreCount = new Map<string, number>()
+    const readAuthorCount = new Map<string, number>()
+
+    readBooks.forEach((book) => {
+      if (book.genre) {
+        readGenreCount.set(book.genre, (readGenreCount.get(book.genre) ?? 0) + 1)
+      }
+      readAuthorCount.set(book.author, (readAuthorCount.get(book.author) ?? 0) + 1)
+    })
+
+    const topReadGenres = [...readGenreCount.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([genre]) => genre)
+    const topReadAuthors = [...readAuthorCount.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([author]) => author)
+
+    return { topReadGenres, topReadAuthors }
+  }, [readBooks])
+
   // Libros ya guardados para no recomendarlos de nuevo.
   const ownedTitles = useMemo(() => {
     return new Set(books.map((book) => book.title.toLowerCase()))
@@ -63,22 +91,33 @@ export function ExplorePage() {
   const recommended = useMemo(() => {
     return SUGGESTED_CATALOG.map((candidate) => {
       let score = 0
-      if (profile.topGenres.slice(0, 2).includes(candidate.genre)) score += 2
-      if (profile.topAuthors.slice(0, 2).includes(candidate.author)) score += 1
+      // Señales generales de la biblioteca.
+      if (profile.topGenres.slice(0, 3).includes(candidate.genre)) score += 2
+      if (profile.topAuthors.slice(0, 3).includes(candidate.author)) score += 2
+      // Señales fuertes: hábitos de libros ya leídos.
+      if (readProfile.topReadGenres.slice(0, 3).includes(candidate.genre)) score += 3
+      if (readProfile.topReadAuthors.slice(0, 3).includes(candidate.author)) score += 3
       if (ownedTitles.has(candidate.title.toLowerCase())) score -= 100
       return { ...candidate, score }
     })
       .filter((book) => book.score > -100)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
-  }, [ownedTitles, profile.topAuthors, profile.topGenres])
+      .slice(0, recommendedVisibleCount)
+  }, [
+    ownedTitles,
+    profile.topAuthors,
+    profile.topGenres,
+    readProfile.topReadAuthors,
+    readProfile.topReadGenres,
+    recommendedVisibleCount,
+  ])
 
   // Sugerencias secundarias para ampliar lecturas.
   const suggestions = useMemo(() => {
     return SUGGESTED_CATALOG.filter((candidate) => !ownedTitles.has(candidate.title.toLowerCase()))
       .filter((candidate) => !recommended.some((book) => book.title === candidate.title))
-      .slice(0, 4)
-  }, [ownedTitles, recommended])
+      .slice(0, suggestionsVisibleCount)
+  }, [ownedTitles, recommended, suggestionsVisibleCount])
 
   const hasReadingHistory = readBooks.length > 0 || books.length > 0
 
@@ -104,6 +143,7 @@ export function ExplorePage() {
             title: work.title,
             author: work.authors?.[0]?.name ?? 'Autor desconocido',
             genre: work.subject?.[0] ?? 'Fiction',
+            coverUrl: work.cover_id ? `https://covers.openlibrary.org/b/id/${work.cover_id}-L.jpg` : undefined,
           })) ?? []
 
         setTrendingBooks(mappedBooks)
@@ -122,13 +162,40 @@ export function ExplorePage() {
   }, [])
 
   // Añade una sugerencia/recomendacion a la biblioteca local.
-  const addSuggestedToLibrary = (book: SuggestedBook) => {
+  const addSuggestedToLibrary = (book: SuggestedBook, status: 'wishlist' | 'read') => {
     addBook({
       title: book.title,
       author: book.author,
       genre: book.genre,
-      status: 'wishlist',
+      coverUrl: book.coverUrl,
+      status,
     })
+  }
+
+  // Muestra portada si existe; si no, fallback simple.
+  const renderBookCover = (book: SuggestedBook) => {
+    if (book.coverUrl) {
+      return (
+        <img
+          src={book.coverUrl}
+          alt={`Portada de ${book.title}`}
+          className="h-16 w-12 rounded object-cover"
+        />
+      )
+    }
+
+    return (
+      <div className="relative h-16 w-12 overflow-hidden rounded border border-[#3a2a12] bg-gradient-to-b from-[#1b1b1b] via-[#141414] to-[#0f0f0f]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,184,108,0.2),_transparent_60%)]" />
+        <div className="relative flex h-full flex-col items-center justify-center px-1 text-center">
+          <span className="text-[11px] text-[var(--ri-accent)]">✦</span>
+          <span className="mt-0.5 text-[7px] uppercase tracking-[0.8px] text-[var(--ri-text-muted)]">
+            Readink
+          </span>
+          <span className="text-[7px] text-[var(--ri-text-muted)]">Edition</span>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -142,6 +209,25 @@ export function ExplorePage() {
       <p className="mb-6 text-sm text-[var(--ri-text-muted)]">
         Recomendaciones basadas en tu biblioteca actual. Más adelante se conectarán con Open Library.
       </p>
+
+      {booksLoading ? (
+        <div className="mb-4 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-3">
+          <p className="text-sm text-[var(--ri-text-muted)]">Cargando tu perfil de lectura...</p>
+        </div>
+      ) : null}
+
+      {booksError ? (
+        <div className="mb-4 rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-3">
+          <p className="text-sm text-[#ff9b9b]">{booksError}</p>
+          <button
+            type="button"
+            onClick={() => void retryLoadBooks()}
+            className="mt-2 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-3 py-1.5 text-xs text-[var(--ri-text-secondary)]"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : null}
 
       {hasReadingHistory ? null : (
         <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-4">
@@ -175,22 +261,44 @@ export function ExplorePage() {
                 </Link>
               </article>
             ) : null}
-            {trendingBooks.map((book) => (
+            {trendingBooks.slice(0, trendingVisibleCount).map((book) => (
               <article key={book.title} className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
-                <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
-                <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
-                <p className="mt-2 text-xs text-[var(--ri-accent)]">{book.genre}</p>
+                <div className="flex items-start gap-3">
+                  {renderBookCover(book)}
+                  <div>
+                    <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
+                    <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
+                    <p className="mt-2 text-xs text-[var(--ri-accent)]">{book.genre}</p>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  onClick={() => addSuggestedToLibrary(book)}
+                  onClick={() => addSuggestedToLibrary(book, 'wishlist')}
                   disabled={ownedTitles.has(book.title.toLowerCase())}
                   className="mt-3 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Añadir a biblioteca'}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => addSuggestedToLibrary(book, 'read')}
+                  disabled={ownedTitles.has(book.title.toLowerCase())}
+                  className="ml-2 mt-3 rounded-md border border-[#164e63] bg-[#07141d] px-3 py-1.5 text-xs font-medium text-[var(--ri-reading)] transition-colors hover:bg-[#0b1a25] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Marcar como leído
+                </button>
               </article>
             ))}
           </div>
+        ) : null}
+        {trendingBooks.length > trendingVisibleCount ? (
+          <button
+            type="button"
+            onClick={() => setTrendingVisibleCount((prev) => prev + 4)}
+            className="mt-4 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500]"
+          >
+            + Ver más tendencias
+          </button>
         ) : null}
       </div>
 
@@ -209,20 +317,43 @@ export function ExplorePage() {
           ) : null}
           {recommended.map((book) => (
             <article key={book.title} className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
-              <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
-              <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
-              <p className="mt-2 text-xs text-[var(--ri-accent)]">{book.genre}</p>
+              <div className="flex items-start gap-3">
+                {renderBookCover(book)}
+                <div>
+                  <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
+                  <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
+                  <p className="mt-2 text-xs text-[var(--ri-accent)]">{book.genre}</p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => addSuggestedToLibrary(book)}
+                onClick={() => addSuggestedToLibrary(book, 'wishlist')}
                 disabled={ownedTitles.has(book.title.toLowerCase())}
                 className="mt-3 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
               >
                   {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Añadir a biblioteca'}
               </button>
+              <button
+                type="button"
+                onClick={() => addSuggestedToLibrary(book, 'read')}
+                disabled={ownedTitles.has(book.title.toLowerCase())}
+                className="ml-2 mt-3 rounded-md border border-[#164e63] bg-[#07141d] px-3 py-1.5 text-xs font-medium text-[var(--ri-reading)] transition-colors hover:bg-[#0b1a25] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Marcar como leído
+              </button>
             </article>
           ))}
         </div>
+        {SUGGESTED_CATALOG.filter((candidate) => !ownedTitles.has(candidate.title.toLowerCase())).length >
+        recommended.length ? (
+          <button
+            type="button"
+            onClick={() => setRecommendedVisibleCount((prev) => prev + 4)}
+            className="mt-4 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500]"
+          >
+            + Ver más recomendadas
+          </button>
+        ) : null}
       </div>
 
       <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] p-5">
@@ -240,20 +371,43 @@ export function ExplorePage() {
           ) : null}
           {suggestions.map((book) => (
             <article key={book.title} className="rounded-md border border-[var(--ri-border)] bg-[#111] p-4">
-              <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
-              <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
-              <p className="mt-2 text-xs text-[var(--ri-text-muted)]">{book.genre}</p>
+              <div className="flex items-start gap-3">
+                {renderBookCover(book)}
+                <div>
+                  <p className="text-sm font-medium text-[var(--ri-text-secondary)]">{book.title}</p>
+                  <p className="text-xs text-[var(--ri-text-muted)]">{book.author}</p>
+                  <p className="mt-2 text-xs text-[var(--ri-text-muted)]">{book.genre}</p>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => addSuggestedToLibrary(book)}
+                onClick={() => addSuggestedToLibrary(book, 'wishlist')}
                 disabled={ownedTitles.has(book.title.toLowerCase())}
                 className="mt-3 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500] disabled:cursor-not-allowed disabled:opacity-50"
               >
                   {ownedTitles.has(book.title.toLowerCase()) ? 'Ya en tu biblioteca' : 'Añadir a biblioteca'}
               </button>
+              <button
+                type="button"
+                onClick={() => addSuggestedToLibrary(book, 'read')}
+                disabled={ownedTitles.has(book.title.toLowerCase())}
+                className="ml-2 mt-3 rounded-md border border-[#164e63] bg-[#07141d] px-3 py-1.5 text-xs font-medium text-[var(--ri-reading)] transition-colors hover:bg-[#0b1a25] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Marcar como leído
+              </button>
             </article>
           ))}
         </div>
+        {SUGGESTED_CATALOG.filter((candidate) => !ownedTitles.has(candidate.title.toLowerCase())).length >
+        suggestions.length ? (
+          <button
+            type="button"
+            onClick={() => setSuggestionsVisibleCount((prev) => prev + 4)}
+            className="mt-4 rounded-md border border-[#3a2a12] bg-[#1a1000] px-3 py-1.5 text-xs font-medium text-[var(--ri-accent)] transition-colors hover:bg-[#221500]"
+          >
+            + Ver más sugerencias
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-6">

@@ -6,6 +6,7 @@ export interface Book {
   id: string;
   title: string;
   author: string;
+  coverUrl?: string;
   status: ReadingStatus;
   rating?: number;
   notes?: string;
@@ -18,6 +19,7 @@ export interface Book {
 export interface CreateBookInput {
   title: string;
   author: string;
+  coverUrl?: string;
   status: ReadingStatus;
   rating?: number;
   notes?: string;
@@ -28,6 +30,7 @@ export interface CreateBookInput {
 export interface UpdateBookInput {
   title?: string;
   author?: string;
+  coverUrl?: string;
   status?: ReadingStatus;
   rating?: number;
   notes?: string;

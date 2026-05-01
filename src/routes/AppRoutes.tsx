@@ -1,10 +1,24 @@
+import { lazy } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { MainLayout } from '../layouts/MainLayout'
-import { ExplorePage } from '../pages/ExplorePage'
-import { LibraryPage } from '../pages/LibraryPage'
-import { NotFoundPage } from '../pages/NotFoundPage'
-import { ReadBooksPage } from '../pages/ReadBooksPage'
-import { StatsPage } from '../pages/StatsPage'
+
+// Lazy loading por ruta:
+// cada página se carga cuando se visita, para reducir carga inicial.
+const LibraryPage = lazy(() =>
+  import('../pages/LibraryPage').then((module) => ({ default: module.LibraryPage })),
+)
+const ReadBooksPage = lazy(() =>
+  import('../pages/ReadBooksPage').then((module) => ({ default: module.ReadBooksPage })),
+)
+const ExplorePage = lazy(() =>
+  import('../pages/ExplorePage').then((module) => ({ default: module.ExplorePage })),
+)
+const StatsPage = lazy(() =>
+  import('../pages/StatsPage').then((module) => ({ default: module.StatsPage })),
+)
+const NotFoundPage = lazy(() =>
+  import('../pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
+)
 
 // Configuracion central de rutas de la app.
 // Tenerlo en un solo archivo facilita ver el mapa URL -> pagina.

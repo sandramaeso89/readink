@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useLibraryContext } from '../context/LibraryContext'
+import { useLibraryContext } from '../context/useLibraryContext'
 
 interface ReaderLevel {
   label: string
@@ -40,7 +40,8 @@ function getReaderLevel(readBooksCount: number): ReaderLevel {
 
 // Página "Estadísticas" (ruta "/estadisticas"): resumen visual de lectura.
 export function StatsPage() {
-  const { books, counts, readBooks, top10Books, yearlyGoal, setYearlyGoal } = useLibraryContext()
+  const { books, counts, readBooks, top10Books, yearlyGoal, setYearlyGoal, booksLoading, booksError, retryLoadBooks } =
+    useLibraryContext()
   const [goalDraft, setGoalDraft] = useState(yearlyGoal)
 
   // Porcentaje de libros leídos sobre el total.
@@ -103,6 +104,25 @@ export function StatsPage() {
         Tu progreso de lectura.
       </h1>
       <p className="mb-6 text-sm text-[var(--ri-text-muted)]">Resumen general de tu biblioteca personal.</p>
+
+      {booksLoading ? (
+        <div className="mb-4 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-4 py-3">
+          <p className="text-sm text-[var(--ri-text-muted)]">Cargando estadísticas...</p>
+        </div>
+      ) : null}
+
+      {booksError ? (
+        <div className="mb-4 rounded-md border border-[#3a1f1f] bg-[#160b0b] px-4 py-3">
+          <p className="text-sm text-[#ff9b9b]">{booksError}</p>
+          <button
+            type="button"
+            onClick={() => void retryLoadBooks()}
+            className="mt-2 rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-3 py-1.5 text-xs text-[var(--ri-text-secondary)]"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : null}
 
       <div className="mb-5 grid grid-cols-2 gap-2 md:grid-cols-4">
         <div className="rounded-md border border-[var(--ri-border)] bg-[var(--ri-surface)] px-3.5 py-2">

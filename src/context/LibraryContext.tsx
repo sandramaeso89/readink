@@ -1,12 +1,14 @@
 import {
-  createContext,
   useCallback,
-  useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react'
+import { createBook, deleteBook as deleteBookRequest, getBooks, updateBook, ApiClientError } from '../api/client'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import type { ApiBook } from '../types/api'
+import { LibraryContext } from './LibraryContextInstance'
 
 export interface LibraryCard {
   id: string
@@ -29,235 +31,34 @@ export interface LibraryCard {
 
 type LibraryView = 'all' | 'wishlist' | 'reading' | 'read'
 
-const INITIAL_BOOKS: LibraryCard[] = [
-  {
-    id: 'wishlist-1',
-    title: 'La insoportable levedad',
-    author: 'Milan Kundera',
-    genre: 'Novela',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-2',
-    title: 'Sapiens',
-    author: 'Yuval Noah Harari',
-    genre: 'Historia',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-3',
-    title: 'La vegetariana',
-    author: 'Han Kang',
-    genre: 'Novela',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'reading-1',
-    title: 'Clean Code',
-    author: 'Robert C. Martin',
-    genre: 'Tecnologia',
-    icon: '📗',
-    status: 'reading',
-    progress: 62,
-  },
-  {
-    id: 'reading-2',
-    title: 'El nombre del viento',
-    author: 'Patrick Rothfuss',
-    genre: 'Fantasia',
-    icon: '📗',
-    status: 'reading',
-    progress: 28,
-  },
-  {
-    id: 'read-1',
-    title: 'Atomic Habits',
-    author: 'James Clear',
-    genre: 'Productividad',
-    icon: '📘',
-    status: 'read',
-    stars: 5,
-  },
-  {
-    id: 'wishlist-4',
-    title: 'Dune',
-    author: 'Frank Herbert',
-    genre: 'Fantasia',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-5',
-    title: 'La generacion ansiosa',
-    author: 'Jonathan Haidt',
-    genre: 'Productividad',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-6',
-    title: 'Cien anos de soledad',
-    author: 'Gabriel Garcia Marquez',
-    genre: 'Novela',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-7',
-    title: 'Proyecto Hail Mary',
-    author: 'Andy Weir',
-    genre: 'Ciencia',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'reading-3',
-    title: 'El cuerpo lleva la cuenta',
-    author: 'Bessel van der Kolk',
-    genre: 'Ciencia',
-    icon: '📗',
-    status: 'reading',
-    progress: 34,
-  },
-  {
-    id: 'reading-4',
-    title: 'Don Quijote de la Mancha',
-    author: 'Miguel de Cervantes',
-    genre: 'Novela',
-    icon: '📗',
-    status: 'reading',
-    progress: 18,
-  },
-  {
-    id: 'reading-5',
-    title: 'Alas de sangre',
-    author: 'Rebecca Yarros',
-    genre: 'Fantasia',
-    icon: '📗',
-    status: 'reading',
-    progress: 57,
-  },
-  {
-    id: 'read-2',
-    title: '1984',
-    author: 'George Orwell',
-    genre: 'Novela',
-    icon: '📘',
-    status: 'read',
-    stars: 5,
-  },
-  {
-    id: 'read-3',
-    title: 'El principito',
-    author: 'Antoine de Saint-Exupery',
-    genre: 'Novela',
-    icon: '📘',
-    status: 'read',
-    stars: 4,
-  },
-  {
-    id: 'read-4',
-    title: 'Sapiens',
-    author: 'Yuval Noah Harari',
-    genre: 'Historia',
-    icon: '📘',
-    status: 'read',
-    stars: 5,
-  },
-  {
-    id: 'read-5',
-    title: 'El marciano',
-    author: 'Andy Weir',
-    genre: 'Ciencia',
-    icon: '📘',
-    status: 'read',
-    stars: 4,
-  },
-  {
-    id: 'read-6',
-    title: 'Orgullo y prejuicio',
-    author: 'Jane Austen',
-    genre: 'Novela',
-    icon: '📘',
-    status: 'read',
-    stars: 4,
-  },
-  // Pack tester fantasia.
-  {
-    id: 'wishlist-8',
-    title: 'El imperio final',
-    author: 'Brandon Sanderson',
-    genre: 'Fantasia',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-9',
-    title: 'El temor de un hombre sabio',
-    author: 'Patrick Rothfuss',
-    genre: 'Fantasia',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'reading-6',
-    title: 'El nombre del viento',
-    author: 'Patrick Rothfuss',
-    genre: 'Fantasia',
-    icon: '📗',
-    status: 'reading',
-    progress: 41,
-  },
-  {
-    id: 'read-7',
-    title: 'Harry Potter y la piedra filosofal',
-    author: 'J. K. Rowling',
-    genre: 'Fantasia',
-    icon: '📘',
-    status: 'read',
-    stars: 5,
-  },
-  // Pack tester no ficcion.
-  {
-    id: 'wishlist-10',
-    title: 'Pensar rapido, pensar despacio',
-    author: 'Daniel Kahneman',
-    genre: 'Productividad',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'wishlist-11',
-    title: 'Homo Deus',
-    author: 'Yuval Noah Harari',
-    genre: 'Historia',
-    icon: '📖',
-    status: 'wishlist',
-  },
-  {
-    id: 'reading-7',
-    title: 'La psicologia del dinero',
-    author: 'Morgan Housel',
-    genre: 'Productividad',
-    icon: '📗',
-    status: 'reading',
-    progress: 63,
-  },
-  {
-    id: 'read-8',
-    title: 'Una educacion',
-    author: 'Tara Westover',
-    genre: 'Historia',
-    icon: '📘',
-    status: 'read',
-    stars: 4,
-  },
-]
+function iconByStatus(status: LibraryCard['status']) {
+  if (status === 'wishlist') return '📖'
+  if (status === 'reading') return '📗'
+  return '📘'
+}
 
-interface LibraryContextValue {
+// Convierte el tipo API al tipo que ya usa la UI.
+function mapApiBookToLibraryCard(book: ApiBook): LibraryCard {
+  return {
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    coverUrl: book.coverUrl,
+    note: book.notes,
+    status: book.status,
+    icon: iconByStatus(book.status),
+    progress: book.progress,
+    // Solo mostramos estrellas cuando el estado ya es "read".
+    stars:
+      book.status === 'read' && typeof book.rating === 'number'
+        ? (book.rating as 1 | 2 | 3 | 4 | 5)
+        : undefined,
+    createdAt: book.createdAt,
+    finishedAt: book.finishedAt,
+  }
+}
+
+export interface LibraryContextValue {
   books: LibraryCard[]
   top10BookIds: string[]
   activeView: LibraryView
@@ -273,6 +74,9 @@ interface LibraryContextValue {
   readingBooks: LibraryCard[]
   readBooks: LibraryCard[]
   top10Books: LibraryCard[]
+  booksLoading: boolean
+  booksError: string | null
+  retryLoadBooks: () => Promise<void>
   handleViewChange: (view: LibraryView) => void
   handleSelectBook: (bookId: string) => void
   handleCloseModal: () => void
@@ -295,17 +99,20 @@ interface LibraryContextValue {
   }) => void
   addToTop10: (bookId: string) => { ok: boolean; reason?: 'full' | 'already-added' | 'not-read' }
   removeFromTop10: (bookId: string) => void
+  deleteBookById: (bookId: string) => void
 }
-
-const LibraryContext = createContext<LibraryContextValue | null>(null)
 
 interface LibraryProviderProps {
   children: ReactNode
 }
 
 export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
-  // Estado global de libros compartido por toda la app.
-  const [books, setBooks] = useLocalStorage<LibraryCard[]>('readink.library.v1', INITIAL_BOOKS)
+  // Los libros ahora viven en backend y se cargan por API.
+  const [books, setBooks] = useState<LibraryCard[]>([])
+  // Estado para UI de red: carga inicial.
+  const [booksLoading, setBooksLoading] = useState(true)
+  // Estado para UI de red: error con mensaje claro.
+  const [booksError, setBooksError] = useState<string | null>(null)
   // Lista de ids del Top 10 (persistida en localStorage).
   const [top10BookIds, setTop10BookIds] = useLocalStorage<string[]>('readink.top10.v1', [])
   // Meta anual de lectura configurable por el usuario.
@@ -316,6 +123,29 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null)
   // Libro abierto en el modal de resumen.
   const [openedBookId, setOpenedBookId] = useState<string | null>(null)
+
+  // Carga libros desde API y prepara estados loading/error.
+  const retryLoadBooks = useCallback(async () => {
+    try {
+      setBooksLoading(true)
+      setBooksError(null)
+      const apiBooks = await getBooks()
+      setBooks(apiBooks.map(mapApiBookToLibraryCard))
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        setBooksError(error.message)
+      } else {
+        setBooksError('No se pudieron cargar tus libros. Reintenta.')
+      }
+    } finally {
+      setBooksLoading(false)
+    }
+  }, [])
+
+  // Carga inicial al montar el provider.
+  useEffect(() => {
+    void retryLoadBooks()
+  }, [retryLoadBooks])
 
   // Calculamos métricas una vez por cambio real de libros.
   const counts = useMemo(() => {
@@ -386,19 +216,23 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
   const updateBookNote = useCallback(
     (bookId: string, note: string) => {
       const cleanNote = note.trim()
-      setBooks((prevBooks) =>
-        prevBooks.map((book) => {
-          if (book.id !== bookId) {
-            return book
+      void (async () => {
+        try {
+          setBooksError(null)
+          const updatedBook = await updateBook(bookId, { notes: cleanNote || '' })
+          setBooks((prevBooks) =>
+            prevBooks.map((book) => (book.id === bookId ? mapApiBookToLibraryCard(updatedBook) : book)),
+          )
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo actualizar la nota.')
           }
-          return {
-            ...book,
-            note: cleanNote || undefined,
-          }
-        }),
-      )
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Normaliza la meta anual para evitar valores raros.
@@ -413,79 +247,70 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
   // Cambia un libro de "wishlist" o "read" a "reading".
   const markBookAsReading = useCallback(
     (bookId: string) => {
-      setBooks((prevBooks) =>
-        prevBooks.map((book) => {
-          if (book.id !== bookId) {
-            return book
-          }
-          if (book.status !== 'wishlist' && book.status !== 'read') {
-            return book
-          }
-
-          return {
-            ...book,
+      void (async () => {
+        try {
+          setBooksError(null)
+          const updatedBook = await updateBook(bookId, {
             status: 'reading',
-            // Al empezar lectura, iniciamos en 0%.
             progress: 0,
-            // Si venia de leido, limpiamos estrellas porque ya no esta finalizado.
-            stars: undefined,
-            // Al salir de leido, quitamos fecha de finalizacion anual.
-            finishedAt: undefined,
+          })
+          setBooks((prevBooks) =>
+            prevBooks.map((book) => (book.id === bookId ? mapApiBookToLibraryCard(updatedBook) : book)),
+          )
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo cambiar el estado a leyendo.')
           }
-        }),
-      )
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Cambia un libro de "reading" a "wishlist".
   const markBookAsWishlist = useCallback(
     (bookId: string) => {
-      setBooks((prevBooks) =>
-        prevBooks.map((book) => {
-          if (book.id !== bookId) {
-            return book
+      void (async () => {
+        try {
+          setBooksError(null)
+          const updatedBook = await updateBook(bookId, { status: 'wishlist', progress: 0 })
+          setBooks((prevBooks) =>
+            prevBooks.map((book) => (book.id === bookId ? mapApiBookToLibraryCard(updatedBook) : book)),
+          )
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo mover a quiero leer.')
           }
-          if (book.status !== 'reading') {
-            return book
-          }
-
-          return {
-            ...book,
-            status: 'wishlist',
-            // Al volver a quiero leer, quitamos progreso.
-            progress: undefined,
-          }
-        }),
-      )
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Cambia un libro de "reading" a "read".
   const markBookAsRead = useCallback(
     (bookId: string) => {
-      setBooks((prevBooks) =>
-        prevBooks.map((book) => {
-          if (book.id !== bookId) {
-            return book
+      void (async () => {
+        try {
+          setBooksError(null)
+          const updatedBook = await updateBook(bookId, { status: 'read', progress: 100 })
+          setBooks((prevBooks) =>
+            prevBooks.map((book) => (book.id === bookId ? mapApiBookToLibraryCard(updatedBook) : book)),
+          )
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo marcar como leído.')
           }
-          if (book.status !== 'reading') {
-            return book
-          }
-
-          return {
-            ...book,
-            status: 'read',
-            // Al pasar a leido quitamos progreso.
-            progress: undefined,
-            // Guardamos fecha para estadisticas anuales.
-            finishedAt: new Date().toISOString(),
-          }
-        }),
-      )
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Actualiza el progreso (%) de un libro en estado "reading".
@@ -493,38 +318,45 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
     (bookId: string, progress: number) => {
       // Aseguramos rango valido para evitar valores raros.
       const safeProgress = Math.min(100, Math.max(0, Math.round(progress)))
-
-      setBooks((prevBooks) =>
-        prevBooks.map((book) => {
-          if (book.id !== bookId) {
-            return book
+      void (async () => {
+        try {
+          setBooksError(null)
+          const updatedBook = await updateBook(bookId, { progress: safeProgress })
+          setBooks((prevBooks) =>
+            prevBooks.map((book) => (book.id === bookId ? mapApiBookToLibraryCard(updatedBook) : book)),
+          )
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo actualizar el progreso.')
           }
-          if (book.status !== 'reading') {
-            return book
-          }
-          return { ...book, progress: safeProgress }
-        }),
-      )
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Actualiza la puntuacion de un libro leido.
   const updateBookStars = useCallback(
     (bookId: string, stars: 1 | 2 | 3 | 4 | 5) => {
-      setBooks((prevBooks) =>
-        prevBooks.map((book) => {
-          if (book.id !== bookId) {
-            return book
+      void (async () => {
+        try {
+          setBooksError(null)
+          const updatedBook = await updateBook(bookId, { rating: stars })
+          setBooks((prevBooks) =>
+            prevBooks.map((book) => (book.id === bookId ? mapApiBookToLibraryCard(updatedBook) : book)),
+          )
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo actualizar la valoración.')
           }
-          if (book.status !== 'read') {
-            return book
-          }
-          return { ...book, stars }
-        }),
-      )
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Crea un nuevo libro en la biblioteca global.
@@ -538,31 +370,29 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       status: LibraryCard['status']
       stars?: number
     }) => {
-      // Icono simple segun el estado para mantener estilo visual.
-      const iconByStatus: Record<LibraryCard['status'], string> = {
-        wishlist: '📖',
-        reading: '📗',
-        read: '📘',
-      }
-
-      const newBook: LibraryCard = {
-        id: `book-${Date.now()}`,
-        title: input.title,
-        author: input.author,
-        genre: input.genre,
-        note: input.note?.trim() || undefined,
-        coverUrl: input.coverUrl,
-        createdAt: new Date().toISOString(),
-        finishedAt: input.status === 'read' ? new Date().toISOString() : undefined,
-        status: input.status,
-        icon: iconByStatus[input.status],
-        // Solo guardamos estrellas si viene valor y el estado es "read".
-        stars: input.status === 'read' ? input.stars : undefined,
-      }
-
-      setBooks((prevBooks) => [newBook, ...prevBooks])
+      void (async () => {
+        try {
+          setBooksError(null)
+          const createdBook = await createBook({
+            title: input.title,
+            author: input.author,
+            coverUrl: input.coverUrl,
+            status: input.status,
+            notes: input.note?.trim() || undefined,
+            rating: input.status === 'read' ? input.stars : undefined,
+            progress: input.status === 'reading' ? 0 : undefined,
+          })
+          setBooks((prevBooks) => [mapApiBookToLibraryCard(createdBook), ...prevBooks])
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo crear el libro.')
+          }
+        }
+      })()
     },
-    [setBooks],
+    [setBooks, setBooksError],
   )
 
   // Añade un libro al Top 10 si cumple reglas.
@@ -593,6 +423,29 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
     [setTop10BookIds],
   )
 
+  // Elimina libro en backend y sincroniza estado local.
+  const deleteBookById = useCallback(
+    (bookId: string) => {
+      void (async () => {
+        try {
+          setBooksError(null)
+          await deleteBookRequest(bookId)
+          setBooks((prevBooks) => prevBooks.filter((book) => book.id !== bookId))
+          setTop10BookIds((prevIds) => prevIds.filter((id) => id !== bookId))
+          setSelectedBookId((prevId) => (prevId === bookId ? null : prevId))
+          setOpenedBookId((prevId) => (prevId === bookId ? null : prevId))
+        } catch (error) {
+          if (error instanceof ApiClientError) {
+            setBooksError(error.message)
+          } else {
+            setBooksError('No se pudo eliminar el libro.')
+          }
+        }
+      })()
+    },
+    [setBooks, setBooksError, setTop10BookIds],
+  )
+
   // Resolvemos el libro abierto actual para el modal.
   const openedBook = useMemo(
     () => books.find((book) => book.id === openedBookId) ?? null,
@@ -611,6 +464,9 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       readingBooks,
       readBooks,
       top10Books,
+      booksLoading,
+      booksError,
+      retryLoadBooks,
       handleViewChange,
       handleSelectBook,
       handleCloseModal,
@@ -625,6 +481,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       addBook,
       addToTop10,
       removeFromTop10,
+      deleteBookById,
     }),
     [
       books,
@@ -637,6 +494,9 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       readingBooks,
       readBooks,
       top10Books,
+      booksLoading,
+      booksError,
+      retryLoadBooks,
       handleViewChange,
       handleSelectBook,
       handleCloseModal,
@@ -651,16 +511,10 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       addBook,
       addToTop10,
       removeFromTop10,
+      deleteBookById,
     ],
   )
 
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>
 }
 
-export function useLibraryContext() {
-  const context = useContext(LibraryContext)
-  if (!context) {
-    throw new Error('useLibraryContext debe usarse dentro de LibraryProvider')
-  }
-  return context
-}

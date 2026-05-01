@@ -25,6 +25,8 @@ npm run build    # compilación para producción
 npm run build:server # compila backend a dist/
 npm run preview  # vista previa del build
 npm run lint     # ESLint
+npm run test     # tests básicos con React Testing Library + Vitest
+npm run test:watch # modo watch para desarrollo
 ```
 
 ## Hooks aplicados en el proyecto
@@ -34,14 +36,17 @@ En el estado global (`src/context/LibraryContext.tsx`) se usan estos hooks:
 - `useState`: estado de vista activa, libro seleccionado y modal abierto.
 - `useMemo`: calcula conteos y listas derivadas sin recalculos innecesarios.
 - `useCallback`: mantiene estables los handlers compartidos del contexto.
+- `useEffect`: carga inicial de libros desde API y sincronización de UI.
 
 Ademas, en `src/pages/LibraryPage.tsx` se usa:
 
 - `useEffect`: actualiza el titulo de la pestana con el total de libros.
 
-Tambien se creo un custom hook reutilizable:
+Tambien se usa un custom hook reutilizable:
 
-- `src/hooks/useLocalStorage.ts`: guarda y recupera estado desde `localStorage`.
+- `src/hooks/useLocalStorage.ts`: guarda datos locales de UI (`top10` y `yearlyGoal`).
+
+Los libros de la biblioteca ya no se guardan en `localStorage`; se consultan y actualizan via API.
 
 Documentacion detallada:
 
@@ -106,6 +111,13 @@ En `/estadisticas` ahora se muestran metricas reales de lectura:
 
 En `/explorar` se muestran recomendaciones y sugerencias locales segun tus autores/generos mas usados.
 
+Ahora también incluye:
+
+- portadas en tarjetas cuando hay `coverUrl`,
+- fallback visual premium cuando no hay portada,
+- botón `+ Ver más` en Tendencias, Recomendadas y Sugerencias.
+- lazy loading por rutas con `React.lazy` + `Suspense` para mejorar carga inicial.
+
 ## Funcionalidades nuevas (abril 2026)
 
 Se implementaron mejoras clave orientadas a UX y crecimiento del proyecto:
@@ -114,6 +126,9 @@ Se implementaron mejoras clave orientadas a UX y crecimiento del proyecto:
 - Buscador, filtros y orden en `Biblioteca`.
 - Notas personales por libro (edición desde modal).
 - Importación/autocompletado desde Open Library en el formulario.
+- Integración Open Library vía backend (`/api/v1/openlibrary/search`).
+- Filtro de resultados en español en búsqueda de Open Library.
+- Eliminación de libros desde tarjetas y modal con confirmación visual integrada.
 - Estados vacíos mejorados con CTA claros.
 - Nuevos metadatos (`createdAt`, `finishedAt`) para estadísticas y orden.
 
@@ -185,11 +200,30 @@ Backend Express implementado con arquitectura por capas:
 Rutas base activas:
 
 - `GET /health`
+- `GET /docs` (Swagger UI)
 - `GET /api/v1/books`
 - `GET /api/v1/books/:id`
 - `POST /api/v1/books`
 - `PATCH /api/v1/books/:id`
 - `DELETE /api/v1/books/:id`
+- `GET /api/v1/openlibrary/search?q=...` (búsqueda Open Library vía backend)
+  - filtro de idioma activo: resultados en español según metadatos de Open Library.
+
+Documentación interactiva Swagger:
+
+- Local: `http://localhost:4000/docs`
+- Producción: `https://readink-api.vercel.app/docs`
+
+### Capa de red frontend (`src/api/`)
+
+Cliente API tipado:
+
+- `src/api/client.ts`: llamadas HTTP con `fetch` (`GET`, `POST`, `PATCH`, `DELETE`) y búsqueda Open Library.
+- `src/types/api.ts`: contrato de tipos alineado con backend.
+- `src/context/LibraryContext.tsx`: estado global de red (`loading`, `error`, `retry`).
+
+La búsqueda de Open Library usada en el formulario también pasa por backend para mantener contrato estable y evitar llamadas directas desde frontend.
+Además, la búsqueda del formulario prioriza resultados en español y permite visualizar portada antes de guardar.
 
 ## Documentación
 
@@ -204,6 +238,22 @@ Rutas base activas:
 - [Formularios controlados](docs/forms.md)
 - [Nuevas funcionalidades](docs/features.md)
 - [Documentación API REST](docs/api.md)
+- [Documentación API Client frontend](docs/api-client.md)
+- [Testing manual y resultados](docs/testing.md)
+- [Guía de despliegue](docs/deployment.md)
+- [Retrospectiva final del proyecto](docs/retrospective.md)
+
+## URLs de producción
+
+- Frontend: [https://readink.vercel.app/](https://readink.vercel.app/)
+- API backend: [https://readink-api.vercel.app/](https://readink-api.vercel.app/)
+
+## Estado de testing
+
+- Lint: OK (`npm run lint`)
+- Build frontend: OK (`npm run build`)
+- Build backend: OK (`npm --prefix server run build`)
+- Detalle de pruebas funcionales y hallazgos en `docs/testing.md`
 
 ## Tablero Trello
 
@@ -214,3 +264,12 @@ Rutas base activas:
 ## Licencia
 
 Por definir.
+
+## Pendiente de implementación
+
+### Checklist de estado
+
+- [ ] Pendiente: Autenticación de usuarios con Firebase (registro, login y gestión de sesión).
+- [ ] Pendiente: Persistir Top 10 y objetivo anual en backend (quitar dependencia de LocalStorage).
+- [x] Hecho: Backend por capas para libros (routes/controllers/services/validators).
+- [x] Hecho: Cliente API tipado en frontend y estados de red (`loading`, `error`, `retry`).
