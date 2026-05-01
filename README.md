@@ -75,6 +75,7 @@ La app tiene varias páginas gestionadas con React Router. Cada URL corresponde 
 | `/leidos` | Leidos (lista completa + Top 10) |
 | `/explorar` | Explorar (recomendaciones segun biblioteca local) |
 | `/estadisticas` | Estadísticas (metricas reales) |
+| `/login` | Inicio de sesión (pantalla base, preparada para Firebase Auth) |
 | `*` | Página 404 |
 
 Configuración central: `src/routes/AppRoutes.tsx`.

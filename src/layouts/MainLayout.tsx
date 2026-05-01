@@ -45,15 +45,23 @@ export function MainLayout() {
                 </NavLink>
               </li>
             ))}
+            <li>
+              <button
+                type="button"
+                onClick={() => setIsAddBookModalOpen(true)}
+                className="rounded-md bg-[var(--ri-accent)] px-3 py-1 text-xs font-medium text-[var(--ri-bg)]"
+              >
+                + Añadir libro
+              </button>
+            </li>
           </ul>
 
-          <button
-            type="button"
-            onClick={() => setIsAddBookModalOpen(true)}
-            className="rounded-md bg-[var(--ri-accent)] px-4 py-1.5 text-xs font-medium text-[var(--ri-bg)]"
+          <NavLink
+            to="/login"
+            className="rounded-md border border-[var(--ri-border)] px-4 py-1.5 text-xs font-medium text-[var(--ri-text-primary)] transition-colors hover:bg-[var(--ri-surface)]"
           >
-            + Añadir libro
-          </button>
+            Iniciar sesión
+          </NavLink>
         </nav>
 
         {/* Aqui se pinta la pagina activa segun la URL. */}

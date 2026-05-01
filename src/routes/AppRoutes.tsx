@@ -16,6 +16,9 @@ const ExplorePage = lazy(() =>
 const StatsPage = lazy(() =>
   import('../pages/StatsPage').then((module) => ({ default: module.StatsPage })),
 )
+const LoginPage = lazy(() =>
+  import('../pages/LoginPage').then((module) => ({ default: module.LoginPage })),
+)
 const NotFoundPage = lazy(() =>
   import('../pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
 )
@@ -31,6 +34,7 @@ export function AppRoutes() {
         <Route path="/leidos" element={<ReadBooksPage />} />
         <Route path="/explorar" element={<ExplorePage />} />
         <Route path="/estadisticas" element={<StatsPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         {/* Catch-all: cualquier URL no listada arriba cae en la 404. */}
         <Route path="*" element={<NotFoundPage />} />
