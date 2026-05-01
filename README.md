@@ -13,14 +13,16 @@ Estado actual: frontend en React + TypeScript con layout minimalista oscuro, est
 | [Tailwind CSS](https://tailwindcss.com/) | Estilos |
 | [React Hooks](https://react.dev/reference/react) | Estado, efectos y optimizacion de render |
 | [React Router](https://reactrouter.com/) | Enrutado cliente (páginas y navegación) |
-| Backend (carpeta `server/`) | API REST Express (por implementar) |
+| Backend (carpeta `server/`) | API REST con Node.js + Express + TypeScript |
 
 ## Scripts
 
 ```bash
 # desarrollo (Vite)
 npm run dev     # inicia servidor de desarrollo
+npm run dev:server # inicia backend Express (puerto 4000)
 npm run build    # compilación para producción
+npm run build:server # compila backend a dist/
 npm run preview  # vista previa del build
 npm run lint     # ESLint
 ```
@@ -173,7 +175,21 @@ Documentacion detallada:
 
 ### Backend (`server/`)
 
-Estructura preparada para Express: `routes/`, `controllers/`, `services/`, `config/`.
+Backend Express implementado con arquitectura por capas:
+
+- `routes/`: define endpoints HTTP.
+- `controllers/`: recibe request/response y decide códigos HTTP.
+- `services/`: lógica de negocio y persistencia temporal en memoria.
+- `validators/`: validación de datos en la frontera de red.
+
+Rutas base activas:
+
+- `GET /health`
+- `GET /api/v1/books`
+- `GET /api/v1/books/:id`
+- `POST /api/v1/books`
+- `PATCH /api/v1/books/:id`
+- `DELETE /api/v1/books/:id`
 
 ## Documentación
 
@@ -187,6 +203,7 @@ Estructura preparada para Express: `routes/`, `controllers/`, `services/`, `conf
 - [Rutas y navegación](docs/routing.md)
 - [Formularios controlados](docs/forms.md)
 - [Nuevas funcionalidades](docs/features.md)
+- [Documentación API REST](docs/api.md)
 
 ## Tablero Trello
 
