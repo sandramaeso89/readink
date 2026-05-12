@@ -20,7 +20,8 @@ Estado actual: frontend en React + TypeScript con layout minimalista oscuro, est
 ```bash
 # desarrollo (Vite)
 npm run dev     # inicia servidor de desarrollo
-npm run dev:server # inicia backend Express (puerto 4000)
+npm run dev:all # Vite + backend Express a la vez (recomendado en local)
+npm run dev:server # solo backend Express (puerto 4000)
 npm run build    # compilación para producción
 npm run build:server # compila backend a dist/
 npm run preview  # vista previa del build
@@ -249,6 +250,15 @@ Además, la búsqueda del formulario prioriza resultados en español y permite v
 - Frontend: [https://readink.vercel.app/](https://readink.vercel.app/)
 - API backend: [https://readink-api.vercel.app/](https://readink-api.vercel.app/)
 
+## Local vs producción (Vercel) — recordatorio
+
+Qué hay que tener en cuenta cuando lo revises o completes más adelante:
+
+- **En local:** la web corre en el puerto que indique Vite (p. ej. `http://localhost:5173` o `5174` si 5173 está ocupado). Las peticiones a la API en desarrollo pueden ir por **proxy de Vite** hacia `localhost:4000`; conviene levantar frontend y backend juntos con `npm run dev:all`.
+- **En Vercel (visitantes):** el bundle de producción **no** usa `localhost`. El cliente (`src/api/client.ts`) toma la URL base así: variable **`VITE_API_BASE_URL`** en build → si no está definida, cae por defecto en **`https://readink-api.vercel.app`**. Conviene definir `VITE_API_BASE_URL` en el proyecto del **frontend** en Vercel (mismo valor que la API desplegada) y hacer **redeploy** tras cambios.
+- **Salud de la API en producción:** comprobar `https://readink-api.vercel.app/health` (respuesta `200`).
+- **Limitación actual del backend:** los libros se guardan **en memoria**. En entorno serverless (Vercel) eso **no garantiza persistencia** entre invocaciones o reinicios; cada usuario puede ver datos inconsistentes o vacíos hasta que exista una capa de persistencia (base de datos u otro almacenamiento). Esto va enlazado con los ítems pendientes del checklist siguiente.
+
 ## Estado de testing
 
 - Lint: OK (`npm run lint`)
@@ -271,6 +281,8 @@ Por definir.
 ### Checklist de estado
 
 - [ ] Pendiente: Autenticación de usuarios con Firebase (registro, login y gestión de sesión).
+- [ ] Pendiente: Persistencia real de libros en el backend desplegado (BD u otro store; la memoria actual no es fiable en Vercel serverless).
+- [ ] Pendiente: Revisar en Vercel (frontend) la variable `VITE_API_BASE_URL` y redeploy tras cambios relevantes del cliente API.
 - [ ] Pendiente: Persistir Top 10 y objetivo anual en backend (quitar dependencia de LocalStorage).
 - [x] Hecho: Backend por capas para libros (routes/controllers/services/validators).
 - [x] Hecho: Cliente API tipado en frontend y estados de red (`loading`, `error`, `retry`).

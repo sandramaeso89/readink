@@ -7,17 +7,27 @@ import type {
   UpdateBookPayload,
 } from '../types/api'
 
-// Si VITE_API_BASE_URL está como "" en .env, `??` no sustituye y fetch usa URLs relativas
-// contra el origen de Vite (p. ej. :5173), no contra Express (:4000).
+// Prioridad: VITE_API_BASE_URL (.env) → si no hay valor:
+// - vite dev: rutas relativas + proxy en vite.config → localhost:4000
+// - build producción: API pública (evita bundlar localhost en Vercel sin .env)
+const PUBLIC_API_FALLBACK = 'https://readink-api.vercel.app'
+
 function resolveApiBaseUrl(): string {
   const raw = import.meta.env.VITE_API_BASE_URL
   const trimmed = typeof raw === 'string' ? raw.trim() : ''
-  const fallback = 'http://localhost:4000'
-  if (!trimmed) return fallback
-  return trimmed.replace(/\/+$/, '')
+  if (trimmed) return trimmed.replace(/\/+$/, '')
+  // En `vite dev`, rutas relativas pasan por el proxy (vite.config) → :4000; evita fallos raros con localhost directo.
+  if (import.meta.env.DEV) return ''
+  return PUBLIC_API_FALLBACK
 }
 
 const API_BASE_URL = resolveApiBaseUrl()
+
+function apiBaseLabel(): string {
+  if (API_BASE_URL) return API_BASE_URL
+  if (import.meta.env.DEV) return 'mismo origen (proxy Vite → localhost:4000)'
+  return PUBLIC_API_FALLBACK
+}
 
 // Error simple para mostrar mensajes claros en UI.
 export class ApiClientError extends Error {
@@ -39,14 +49,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       },
     })
   } catch (cause) {
-    const hint =
-      API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1')
-        ? ' Comprueba que el backend esté en marcha (npm run dev:server, puerto 4000).'
-        : ''
-    throw new ApiClientError(
-      `No hay conexión con la API (${API_BASE_URL}).${hint}`,
-      { cause },
-    )
+    const usesDevProxy = import.meta.env.DEV && API_BASE_URL === ''
+    const isLocal =
+      usesDevProxy ||
+      API_BASE_URL.includes('localhost') ||
+      API_BASE_URL.includes('127.0.0.1')
+    const hint = isLocal
+      ? ' Arranca el backend (puerto 4000). Con una sola terminal: npm run dev:all'
+      : ' Revisa tu red o el estado del servicio desplegado.'
+    throw new ApiClientError(`No hay conexión con la API (${apiBaseLabel()}).${hint}`, {
+      cause,
+    })
   }
 
   // Si backend responde error, intentamos leer mensaje real.
