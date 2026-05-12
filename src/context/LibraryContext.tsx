@@ -96,7 +96,7 @@ export interface LibraryContextValue {
     coverUrl?: string
     status: LibraryCard['status']
     stars?: number
-  }) => void
+  }) => Promise<void>
   addToTop10: (bookId: string) => { ok: boolean; reason?: 'full' | 'already-added' | 'not-read' }
   removeFromTop10: (bookId: string) => void
   deleteBookById: (bookId: string) => void
@@ -361,7 +361,7 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
 
   // Crea un nuevo libro en la biblioteca global.
   const addBook = useCallback(
-    (input: {
+    async (input: {
       title: string
       author: string
       genre?: string
@@ -370,27 +370,27 @@ export function LibraryProvider({ children }: Readonly<LibraryProviderProps>) {
       status: LibraryCard['status']
       stars?: number
     }) => {
-      void (async () => {
-        try {
-          setBooksError(null)
-          const createdBook = await createBook({
-            title: input.title,
-            author: input.author,
-            coverUrl: input.coverUrl,
-            status: input.status,
-            notes: input.note?.trim() || undefined,
-            rating: input.status === 'read' ? input.stars : undefined,
-            progress: input.status === 'reading' ? 0 : undefined,
-          })
-          setBooks((prevBooks) => [mapApiBookToLibraryCard(createdBook), ...prevBooks])
-        } catch (error) {
-          if (error instanceof ApiClientError) {
-            setBooksError(error.message)
-          } else {
-            setBooksError('No se pudo crear el libro.')
-          }
+      try {
+        setBooksError(null)
+        const createdBook = await createBook({
+          title: input.title,
+          author: input.author,
+          coverUrl: input.coverUrl,
+          status: input.status,
+          notes: input.note?.trim() || undefined,
+          rating: input.status === 'read' ? input.stars : undefined,
+          progress: input.status === 'reading' ? 0 : undefined,
+        })
+        setBooks((prevBooks) => [mapApiBookToLibraryCard(createdBook), ...prevBooks])
+      } catch (error) {
+        if (error instanceof ApiClientError) {
+          setBooksError(error.message)
+          throw error
         }
-      })()
+        const message = 'No se pudo crear el libro.'
+        setBooksError(message)
+        throw new ApiClientError(message)
+      }
     },
     [setBooks, setBooksError],
   )

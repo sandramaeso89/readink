@@ -163,12 +163,14 @@ export function ExplorePage() {
 
   // Añade una sugerencia/recomendacion a la biblioteca local.
   const addSuggestedToLibrary = (book: SuggestedBook, status: 'wishlist' | 'read') => {
-    addBook({
+    void addBook({
       title: book.title,
       author: book.author,
       genre: book.genre,
       coverUrl: book.coverUrl,
       status,
+    }).catch(() => {
+      // El mensaje queda en booksError del contexto.
     })
   }
 

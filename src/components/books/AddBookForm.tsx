@@ -86,7 +86,7 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
     }
   }, [openLibraryQuery])
 
-  const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const cleanTitle = title.trim()
@@ -99,33 +99,38 @@ export function AddBookForm({ onSuccess }: Readonly<AddBookFormProps>) {
       return
     }
 
-    addBook({
-      title: cleanTitle,
-      author: cleanAuthor,
-      genre,
-      note,
-      coverUrl: coverUrl.trim() || undefined,
-      status,
-      // Solo enviamos estrellas cuando el estado es "leído".
-      stars: status === 'read' ? stars : undefined,
-    })
+    try {
+      await addBook({
+        title: cleanTitle,
+        author: cleanAuthor,
+        genre,
+        note,
+        coverUrl: coverUrl.trim() || undefined,
+        status,
+        // Solo enviamos estrellas cuando el estado es "leído".
+        stars: status === 'read' ? stars : undefined,
+      })
 
-    // Limpiamos inputs para permitir alta rápida de otro libro.
-    setTitle('')
-    setAuthor('')
-    setGenre('Novela')
-    setNote('')
-    setCoverUrl('')
-    setStatus('wishlist')
-    setStars(5)
-    setOpenLibraryQuery('')
-    setOpenLibraryResults([])
-    setOpenLibraryError('')
-    setFormStatus('success')
-    setMessage('Libro añadido correctamente.')
+      // Limpiamos inputs solo si el backend confirmó el alta.
+      setTitle('')
+      setAuthor('')
+      setGenre('Novela')
+      setNote('')
+      setCoverUrl('')
+      setStatus('wishlist')
+      setStars(5)
+      setOpenLibraryQuery('')
+      setOpenLibraryResults([])
+      setOpenLibraryError('')
+      setFormStatus('success')
+      setMessage('Libro añadido correctamente.')
 
-    // Si el formulario vive en modal, avisamos para cerrarlo.
-    onSuccess?.()
+      // Si el formulario vive en modal, avisamos para cerrarlo.
+      onSuccess?.()
+    } catch (error) {
+      setFormStatus('error')
+      setMessage(error instanceof ApiClientError ? error.message : 'No se pudo crear el libro.')
+    }
   }
 
   return (
